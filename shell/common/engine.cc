@@ -43,7 +43,8 @@ Engine::Engine(Delegate& delegate,
                TaskRunners task_runners,
                Settings settings,
                std::unique_ptr<Animator> animator,
-               fml::WeakPtr<IOManager> io_manager)
+               fml::WeakPtr<IOManager> io_manager,
+               fml::RefPtr<SkiaUnrefQueue> unref_queue)
     : delegate_(delegate),
       settings_(std::move(settings)),
       animator_(std::move(animator)),
@@ -64,6 +65,7 @@ Engine::Engine(Delegate& delegate,
       std::move(shared_snapshot),            // shared snapshot
       task_runners_,                         // task runners
       std::move(io_manager),                 // io manager
+      std::move(unref_queue),                // Skia unref queue
       image_decoder_.GetWeakPtr(),           // image decoder
       settings_.advisory_script_uri,         // advisory script uri
       settings_.advisory_script_entrypoint,  // advisory script entrypoint
@@ -441,6 +443,7 @@ void Engine::Render(std::unique_ptr<flutter::LayerTree> layer_tree) {
     return;
 
   layer_tree->set_frame_size(frame_size);
+  layer_tree->set_device_pixel_ratio(viewport_metrics_.device_pixel_ratio);
   animator_->Render(std::move(layer_tree));
 }
 
