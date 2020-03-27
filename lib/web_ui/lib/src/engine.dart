@@ -69,7 +69,6 @@ part 'engine/platform_views.dart';
 part 'engine/plugins.dart';
 part 'engine/pointer_binding.dart';
 part 'engine/pointer_converter.dart';
-part 'engine/profiler.dart';
 part 'engine/render_vertices.dart';
 part 'engine/rrect_renderer.dart';
 part 'engine/semantics/accessibility.dart';
@@ -164,10 +163,6 @@ void webOnlyInitializeEngine() {
   domRenderer;
 
   WebExperiments.ensureInitialized();
-
-  if (Profiler.isBenchmarkMode) {
-    Profiler.ensureInitialized();
-  }
 
   bool waitingForAnimation = false;
   ui.webOnlyScheduleFrameCallback = () {
