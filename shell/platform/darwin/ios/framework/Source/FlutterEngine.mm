@@ -56,7 +56,7 @@ static size_t g_shellCount = 0;
 
 @implementation FlutterEngine {
   fml::scoped_nsobject<FlutterDartProject> _dartProject;
-  flutter::ThreadHost _threadHost;
+  std::shared_ptr<flutter::ThreadHost> _threadHost;
   std::unique_ptr<flutter::Shell> _shell;
   NSString* _labelPrefix;
   std::unique_ptr<fml::WeakPtrFactory<FlutterEngine>> _weakFactory;
@@ -65,8 +65,8 @@ static size_t g_shellCount = 0;
   fml::scoped_nsobject<FlutterObservatoryPublisher> _publisher;
 
   std::unique_ptr<flutter::FlutterPlatformViewsController> _platformViewsController;
-  std::unique_ptr<flutter::ProfilerMetricsIOS> _profiler_metrics;
-  std::unique_ptr<flutter::SamplingProfiler> _profiler;
+  std::shared_ptr<flutter::ProfilerMetricsIOS> _profiler_metrics;
+  std::shared_ptr<flutter::SamplingProfiler> _profiler;
 
   // Channels
   fml::scoped_nsobject<FlutterPlatformPlugin> _platformPlugin;
@@ -298,7 +298,7 @@ static size_t g_shellCount = 0;
   self.isolateId = nil;
   _shell.reset();
   _profiler.reset();
-  _threadHost.Reset();
+  _threadHost.reset();
   _platformViewsController.reset();
 }
 
@@ -360,10 +360,10 @@ static size_t g_shellCount = 0;
 }
 
 - (void)startProfiler {
-  FML_DCHECK(!_threadHost.name_prefix.empty());
-  _profiler_metrics = std::make_unique<flutter::ProfilerMetricsIOS>();
-  _profiler = std::make_unique<flutter::SamplingProfiler>(
-      _threadHost.name_prefix.c_str(), _threadHost.profiler_thread->GetTaskRunner(),
+  FML_DCHECK(!_threadHost->name_prefix.empty());
+  _profiler_metrics = std::make_shared<flutter::ProfilerMetricsIOS>();
+  _profiler = std::make_shared<flutter::SamplingProfiler>(
+      _threadHost->name_prefix.c_str(), _threadHost->profiler_thread->GetTaskRunner(),
       [self]() { return self->_profiler_metrics->GenerateSample(); }, kNumProfilerSamplesPerSec);
   _profiler->Start();
 }
@@ -502,7 +502,7 @@ static size_t g_shellCount = 0;
   return [NSString stringWithFormat:@"%@.%zu", labelPrefix, ++g_shellCount];
 }
 
-+ (flutter::ThreadHost)makeThreadHost:(NSString*)threadLabel {
++ (std::shared_ptr<flutter::ThreadHost>)makeThreadHost:(NSString*)threadLabel {
   // The current thread will be used as the platform thread. Ensure that the message loop is
   // initialized.
   fml::MessageLoop::EnsureInitializedForCurrentThread();
@@ -512,8 +512,8 @@ static size_t g_shellCount = 0;
   if ([FlutterEngine isProfilerEnabled]) {
     threadHostType = threadHostType | flutter::ThreadHost::Type::Profiler;
   }
-  return {threadLabel.UTF8String,  // label
-          threadHostType};
+  return std::make_shared<flutter::ThreadHost>(threadLabel.UTF8String,  // label
+          threadHostType);
 }
 
 - (BOOL)createShell:(NSString*)entrypoint
@@ -561,9 +561,9 @@ static size_t g_shellCount = 0;
 
   flutter::TaskRunners task_runners(threadLabel.UTF8String,                          // label
                                     fml::MessageLoop::GetCurrent().GetTaskRunner(),  // platform
-                                    _threadHost.raster_thread->GetTaskRunner(),      // raster
-                                    _threadHost.ui_thread->GetTaskRunner(),          // ui
-                                    _threadHost.io_thread->GetTaskRunner()           // io
+                                    _threadHost->raster_thread->GetTaskRunner(),      // raster
+                                    _threadHost->ui_thread->GetTaskRunner(),          // ui
+                                    _threadHost->io_thread->GetTaskRunner()           // io
   );
 
   // Create the shell. This is a blocking operation.
@@ -901,6 +901,42 @@ static size_t g_shellCount = 0;
     return;
   }
   [self.localizationChannel invokeMethod:@"setLocale" arguments:localeData];
+}
+
+- (FlutterEngine*)spawnWithEntrypoint:(NSString*)entrypoint {
+  assert(_shell);
+  FlutterEngine* result =
+      [[FlutterEngine alloc] initWithName:[_labelPrefix stringByAppendingString:@"-spawn"]
+                                  project:_dartProject.get()
+                   allowHeadlessExecution:_allowHeadlessExecution];
+
+  flutter::Settings settings = _shell->GetSettings();
+  if (entrypoint) {
+    settings.advisory_script_entrypoint = entrypoint.UTF8String;
+    settings.advisory_script_uri = std::string("main.dart");
+  } else {
+    settings.advisory_script_entrypoint = std::string("main");
+    settings.advisory_script_uri = std::string("main.dart");
+  }
+
+  flutter::Shell::CreateCallback<flutter::PlatformView> on_create_platform_view =
+      [](flutter::Shell& shell) {
+        return std::make_unique<flutter::PlatformViewIOS>(
+            shell, flutter::GetRenderingAPIForProcess(FlutterView.forceSoftwareRendering),
+            shell.GetTaskRunners());
+      };
+
+  flutter::Shell::CreateCallback<flutter::Rasterizer> on_create_rasterizer =
+      [](flutter::Shell& shell) { return std::make_unique<flutter::Rasterizer>(shell); };
+
+  std::unique_ptr<flutter::Shell> shell =
+      _shell->Spawn(std::move(settings), on_create_platform_view, on_create_rasterizer);
+
+  result->_threadHost = _threadHost;
+  result->_profiler = _profiler;
+  result->_profiler_metrics = _profiler_metrics;
+  [result setupShell:std::move(shell) withObservatoryPublication:NO];
+  return result;
 }
 
 @end
