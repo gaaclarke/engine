@@ -904,7 +904,7 @@ static size_t g_shellCount = 0;
 }
 
 - (FlutterEngine*)spawnWithEntrypoint:(NSString*)entrypoint {
-  assert(_shell);
+  FML_DCHECK(_shell);
   FlutterEngine* result =
       [[FlutterEngine alloc] initWithName:[_labelPrefix stringByAppendingString:@"-spawn"]
                                   project:_dartProject.get()
@@ -919,11 +919,15 @@ static size_t g_shellCount = 0;
     settings.advisory_script_uri = std::string("main.dart");
   }
 
+  fml::WeakPtr<flutter::PlatformView> platform_view = _shell->GetPlatformView();
+  FML_DCHECK(platform_view);
+  flutter::PlatformViewIOS* ios_platform_view =
+      static_cast<flutter::PlatformViewIOS*>(platform_view.get());
+  std::shared_ptr<flutter::IOSContext> context = ios_platform_view->GetIosContext();
+  FML_DCHECK(context);
   flutter::Shell::CreateCallback<flutter::PlatformView> on_create_platform_view =
-      [](flutter::Shell& shell) {
-        return std::make_unique<flutter::PlatformViewIOS>(
-            shell, flutter::GetRenderingAPIForProcess(FlutterView.forceSoftwareRendering),
-            shell.GetTaskRunners());
+      [context](flutter::Shell& shell) {
+        return std::make_unique<flutter::PlatformViewIOS>(shell, context, shell.GetTaskRunners());
       };
 
   flutter::Shell::CreateCallback<flutter::Rasterizer> on_create_rasterizer =

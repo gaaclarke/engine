@@ -45,11 +45,16 @@ void PlatformViewIOS::AccessibilityBridgePtr::reset(AccessibilityBridge* bridge)
 }
 
 PlatformViewIOS::PlatformViewIOS(PlatformView::Delegate& delegate,
-                                 IOSRenderingAPI rendering_api,
+                                 const std::shared_ptr<IOSContext>& context,
                                  flutter::TaskRunners task_runners)
     : PlatformView(delegate, std::move(task_runners)),
-      ios_context_(IOSContext::Create(rendering_api)),
+      ios_context_(context),
       accessibility_bridge_([this](bool enabled) { PlatformView::SetSemanticsEnabled(enabled); }) {}
+
+PlatformViewIOS::PlatformViewIOS(PlatformView::Delegate& delegate,
+                                 IOSRenderingAPI rendering_api,
+                                 flutter::TaskRunners task_runners)
+    : PlatformViewIOS(delegate, IOSContext::Create(rendering_api), std::move(task_runners)) {}
 
 PlatformViewIOS::~PlatformViewIOS() = default;
 
