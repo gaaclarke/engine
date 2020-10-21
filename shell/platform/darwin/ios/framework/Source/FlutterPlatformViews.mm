@@ -462,6 +462,7 @@ SkRect FlutterPlatformViewsController::GetPlatformViewRect(int view_id) {
 bool FlutterPlatformViewsController::SubmitFrame(GrDirectContext* gr_context,
                                                  std::shared_ptr<IOSContext> ios_context,
                                                  std::unique_ptr<SurfaceFrame> frame) {
+  NSLog(@"gr_context %p", gr_context);
   FML_DCHECK(flutter_view_);
 
   // Any UIKit related code has to run on main thread.
