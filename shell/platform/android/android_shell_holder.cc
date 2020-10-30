@@ -39,21 +39,27 @@ AndroidShellHolder::AndroidShellHolder(
   FML_CHECK(pthread_key_create(&thread_destruct_key_, ThreadDestructCallback) ==
             0);
 
+  static std::shared_ptr<ThreadHost> shared_threads_;
+
   if (is_background_view) {
-    thread_host_ = {thread_label, ThreadHost::Type::UI};
+    thread_host_ = std::make_shared<ThreadHost>(thread_label, ThreadHost::Type::UI);
   } else {
-    thread_host_ = {thread_label, ThreadHost::Type::UI |
-                                      ThreadHost::Type::RASTER |
-                                      ThreadHost::Type::IO};
+    if (shared_threads_) {
+      thread_host_ = shared_threads_;
+    } else {
+      thread_host_ = std::make_shared<ThreadHost>(thread_label, ThreadHost::Type::UI | ThreadHost::Type::RASTER |
+                                        ThreadHost::Type::IO);
+      shared_threads_ = thread_host_;
+    }
   }
 
   // Detach from JNI when the UI and raster threads exit.
   auto jni_exit_task([key = thread_destruct_key_]() {
     FML_CHECK(pthread_setspecific(key, reinterpret_cast<void*>(1)) == 0);
   });
-  thread_host_.ui_thread->GetTaskRunner()->PostTask(jni_exit_task);
+  thread_host_->ui_thread->GetTaskRunner()->PostTask(jni_exit_task);
   if (!is_background_view) {
-    thread_host_.raster_thread->GetTaskRunner()->PostTask(jni_exit_task);
+    thread_host_->raster_thread->GetTaskRunner()->PostTask(jni_exit_task);
   }
 
   fml::WeakPtr<PlatformViewAndroid> weak_platform_view;
@@ -143,7 +149,8 @@ AndroidShellHolder::AndroidShellHolder(
 
 AndroidShellHolder::~AndroidShellHolder() {
   shell_.reset();
-  thread_host_.Reset();
+  thread_host_->Reset();
+  thread_host_.reset();
   FML_CHECK(pthread_key_delete(thread_destruct_key_) == 0);
 }
 
