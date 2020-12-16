@@ -328,7 +328,7 @@ Shell::Shell(DartVMRef vm,
              TaskRunners task_runners,
              Settings settings,
              std::shared_ptr<VolatilePathTracker> volatile_path_tracker)
-    : task_runners_(std::move(task_runners)),
+    : task_runners_("", nullptr, nullptr, nullptr, nullptr),
       settings_(std::move(settings)),
       vm_(std::move(vm)),
       is_gpu_disabled_sync_switch_(new fml::SyncSwitch()),
@@ -336,6 +336,18 @@ Shell::Shell(DartVMRef vm,
       weak_factory_gpu_(nullptr),
       weak_factory_(this) {
   FML_CHECK(vm_) << "Must have access to VM to create a shell.";
+  scoped_task_runners_.platform = fml::MakeRefCounted<fml::ScopedTaskRunner>(
+      task_runners.GetPlatformTaskRunner());
+  scoped_task_runners_.raster = fml::MakeRefCounted<fml::ScopedTaskRunner>(
+      task_runners.GetRasterTaskRunner());
+  scoped_task_runners_.io = fml::MakeRefCounted<fml::ScopedTaskRunner>(
+      task_runners.GetIOTaskRunner());
+  scoped_task_runners_.ui = fml::MakeRefCounted<fml::ScopedTaskRunner>(
+      task_runners.GetUITaskRunner());
+  task_runners_ =
+      TaskRunners(task_runners.GetLabel(), scoped_task_runners_.platform,
+                  scoped_task_runners_.raster, scoped_task_runners_.ui,
+                  scoped_task_runners_.io);
   FML_DCHECK(task_runners_.IsValid());
   FML_DCHECK(task_runners_.GetPlatformTaskRunner()->RunsTasksOnCurrentThread());
 
@@ -397,36 +409,42 @@ Shell::~Shell() {
   vm_->GetServiceProtocol()->RemoveHandler(this);
 
   fml::AutoResetWaitableEvent ui_latch, gpu_latch, platform_latch, io_latch;
-
   fml::TaskRunner::RunNowOrPostTask(
       task_runners_.GetUITaskRunner(),
-      fml::MakeCopyable([engine = std::move(engine_), &ui_latch]() mutable {
-        engine.reset();
-        ui_latch.Signal();
-      }));
+      fml::MakeCopyable(
+          [engine = std::move(engine_), &ui_latch,
+           &scoped_task_runner = scoped_task_runners_.ui]() mutable {
+            engine.reset();
+            scoped_task_runner->CancelFutureTasks();
+            ui_latch.Signal();
+          }));
   ui_latch.Wait();
 
   fml::TaskRunner::RunNowOrPostTask(
       task_runners_.GetRasterTaskRunner(),
       fml::MakeCopyable(
-          [this, rasterizer = std::move(rasterizer_), &gpu_latch]() mutable {
+          [this, rasterizer = std::move(rasterizer_), &gpu_latch,
+           &scoped_task_runner = scoped_task_runners_.raster]() mutable {
             rasterizer.reset();
             this->weak_factory_gpu_.reset();
+            scoped_task_runner->CancelFutureTasks();
             gpu_latch.Signal();
           }));
   gpu_latch.Wait();
 
   fml::TaskRunner::RunNowOrPostTask(
       task_runners_.GetIOTaskRunner(),
-      fml::MakeCopyable([io_manager = std::move(io_manager_),
-                         platform_view = platform_view_.get(),
-                         &io_latch]() mutable {
-        io_manager.reset();
-        if (platform_view) {
-          platform_view->ReleaseResourceContext();
-        }
-        io_latch.Signal();
-      }));
+      fml::MakeCopyable(
+          [io_manager = std::move(io_manager_),
+           platform_view = platform_view_.get(), &io_latch,
+           &scoped_task_runner = scoped_task_runners_.io]() mutable {
+            io_manager.reset();
+            if (platform_view) {
+              platform_view->ReleaseResourceContext();
+            }
+            scoped_task_runner->CancelFutureTasks();
+            io_latch.Signal();
+          }));
 
   io_latch.Wait();
 
@@ -435,11 +453,13 @@ Shell::~Shell() {
   // example, the NSOpenGLContext on the Mac.
   fml::TaskRunner::RunNowOrPostTask(
       task_runners_.GetPlatformTaskRunner(),
-      fml::MakeCopyable([platform_view = std::move(platform_view_),
-                         &platform_latch]() mutable {
-        platform_view.reset();
-        platform_latch.Signal();
-      }));
+      fml::MakeCopyable(
+          [platform_view = std::move(platform_view_), &platform_latch,
+           &scoped_task_runner = scoped_task_runners_.platform]() mutable {
+            platform_view.reset();
+            scoped_task_runner->CancelFutureTasks();
+            platform_latch.Signal();
+          }));
   platform_latch.Wait();
 }
 
@@ -449,7 +469,11 @@ std::unique_ptr<Shell> Shell::Spawn(
     const CreateCallback<Rasterizer>& on_create_rasterizer) {
   RunConfiguration configuration =
       RunConfiguration::InferFromSettings(settings);
-  TaskRunners task_runners = task_runners_;
+  TaskRunners task_runners = TaskRunners(
+      task_runners_.GetLabel(), scoped_task_runners_.platform->GetTaskRunner(),
+      scoped_task_runners_.raster->GetTaskRunner(),
+      scoped_task_runners_.ui->GetTaskRunner(),
+      scoped_task_runners_.io->GetTaskRunner());
   FML_DCHECK(task_runners.IsValid());
   std::unique_ptr<Shell> result(Shell::Create(std::move(task_runners), settings,
                                               on_create_platform_view,

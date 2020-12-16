@@ -20,6 +20,7 @@
 #include "flutter/fml/memory/ref_ptr.h"
 #include "flutter/fml/memory/thread_checker.h"
 #include "flutter/fml/memory/weak_ptr.h"
+#include "flutter/fml/scoped_task_runner.h"
 #include "flutter/fml/status.h"
 #include "flutter/fml/synchronization/sync_switch.h"
 #include "flutter/fml/synchronization/waitable_event.h"
@@ -397,11 +398,19 @@ class Shell final : public PlatformView::Delegate,
   double GetMainDisplayRefreshRate();
 
  private:
+  struct ScopedTaskRunners {
+    fml::RefPtr<fml::ScopedTaskRunner> platform;
+    fml::RefPtr<fml::ScopedTaskRunner> raster;
+    fml::RefPtr<fml::ScopedTaskRunner> io;
+    fml::RefPtr<fml::ScopedTaskRunner> ui;
+  };
+
   using ServiceProtocolHandler =
       std::function<bool(const ServiceProtocol::Handler::ServiceProtocolMap&,
                          rapidjson::Document*)>;
 
-  const TaskRunners task_runners_;
+  TaskRunners task_runners_;
+  ScopedTaskRunners scoped_task_runners_;
   const Settings settings_;
   DartVMRef vm_;
   mutable std::mutex time_recorder_mutex_;
