@@ -58,7 +58,7 @@ static void StartupAndShutdownShell(benchmark::State& state,
         [](Shell& shell) {
           return std::make_unique<PlatformView>(shell, shell.GetTaskRunners());
         },
-        [](Shell& shell) { return std::make_unique<Rasterizer>(shell); });
+        [](Shell& shell) { return std::make_unique<Rasterizer>(shell); }, false);
   }
 
   FML_CHECK(shell);

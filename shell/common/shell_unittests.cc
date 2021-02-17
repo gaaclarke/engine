@@ -314,7 +314,7 @@ TEST_F(ShellTest,
             },
             ShellTestPlatformView::BackendType::kDefaultBackend, nullptr);
       },
-      [](Shell& shell) { return std::make_unique<Rasterizer>(shell); });
+      [](Shell& shell) { return std::make_unique<Rasterizer>(shell); }, false);
   ASSERT_TRUE(ValidateShell(shell.get()));
   ASSERT_TRUE(DartVMRef::IsInstanceRunning());
   DestroyShell(std::move(shell), std::move(task_runners));

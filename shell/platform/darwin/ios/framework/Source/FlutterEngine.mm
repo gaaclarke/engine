@@ -617,7 +617,8 @@ static void SetEntryPoint(flutter::Settings* settings, NSString* entrypoint, NSS
                              std::move(task_runners),  // task runners
                              std::move(settings),      // settings
                              on_create_platform_view,  // platform view creation
-                             on_create_rasterizer      // rasterzier creation
+                             on_create_rasterizer,     // rasterzier creation
+                             [UIApplication sharedApplication].applicationState != UIApplicationStateActive
       );
 
   if (shell == nullptr) {

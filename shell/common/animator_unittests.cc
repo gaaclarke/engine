@@ -58,7 +58,7 @@ TEST_F(ShellTest, VSyncTargetTime) {
               std::move(create_vsync_waiter),
               ShellTestPlatformView::BackendType::kDefaultBackend, nullptr);
         },
-        [](Shell& shell) { return std::make_unique<Rasterizer>(shell); });
+        [](Shell& shell) { return std::make_unique<Rasterizer>(shell); }, false);
     ASSERT_TRUE(DartVMRef::IsInstanceRunning());
 
     auto configuration = RunConfiguration::InferFromSettings(settings);

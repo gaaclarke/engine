@@ -335,7 +335,7 @@ std::unique_ptr<Shell> ShellTest::CreateShell(
             ShellTestPlatformView::BackendType::kDefaultBackend,
             shell_test_external_view_embedder);
       },
-      [](Shell& shell) { return std::make_unique<Rasterizer>(shell); });
+      [](Shell& shell) { return std::make_unique<Rasterizer>(shell); }, false);
 }
 void ShellTest::DestroyShell(std::unique_ptr<Shell> shell) {
   DestroyShell(std::move(shell), GetTaskRunnersForFixture());

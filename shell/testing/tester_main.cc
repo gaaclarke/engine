@@ -148,7 +148,8 @@ int RunTester(const flutter::Settings& settings,
                              task_runners,             //
                              settings,                 //
                              on_create_platform_view,  //
-                             on_create_rasterizer      //
+                             on_create_rasterizer,      //
+                             false
   );
 
   if (!shell || !shell->IsSetup()) {
