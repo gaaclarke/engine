@@ -188,6 +188,19 @@ AndroidContextGL::AndroidContextGL(
   valid_ = true;
 }
 
+void AndroidContextGL::RasterCleanup() {
+  FML_LOG(ERROR) << "hey hey hey 3";
+  sk_sp<GrDirectContext> main_context = GetMainSkiaContext();
+  SetMainSkiaContext(nullptr);
+  std::unique_ptr<AndroidEGLSurface> pbuffer_surface = CreateOffscreenSurface();
+  if (pbuffer_surface->MakeCurrent()) {
+    main_context->releaseResourcesAndAbandonContext();
+    main_context.reset();
+    ClearCurrent();
+  }
+  pbuffer_surface.reset();
+}
+
 AndroidContextGL::~AndroidContextGL() {
   if (!TeardownContext(environment_->Display(), context_)) {
     FML_LOG(ERROR)
@@ -265,5 +278,4 @@ EGLContext AndroidContextGL::CreateNewContext() const {
       CreateContext(environment_->Display(), config_, EGL_NO_CONTEXT);
   return success ? context : EGL_NO_CONTEXT;
 }
-
 }  // namespace flutter

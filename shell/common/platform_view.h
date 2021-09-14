@@ -812,6 +812,8 @@ class PlatformView {
   virtual std::unique_ptr<SnapshotSurfaceProducer>
   CreateSnapshotSurfaceProducer();
 
+  virtual void RasterCleanup() {}
+
  protected:
   PlatformView::Delegate& delegate_;
   const TaskRunners task_runners_;

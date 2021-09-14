@@ -6,6 +6,7 @@
 #define FLUTTER_SHELL_PLATFORM_ANDROID_ANDROID_CONTEXT_H_
 
 #include "flutter/fml/macros.h"
+#include "flutter/fml/task_runner.h"
 #include "third_party/skia/include/gpu/GrDirectContext.h"
 
 namespace flutter {
@@ -53,6 +54,8 @@ class AndroidContext {
   ///
   sk_sp<GrDirectContext> GetMainSkiaContext() const;
 
+  virtual void RasterCleanup() {}
+
  private:
   const AndroidRenderingAPI rendering_api_;
 
@@ -60,6 +63,15 @@ class AndroidContext {
   sk_sp<GrDirectContext> main_context_;
 
   FML_DISALLOW_COPY_AND_ASSIGN(AndroidContext);
+};
+
+class AndroidContextCleanup {
+ public:
+  AndroidContextCleanup(std::shared_ptr<AndroidContext> context);
+  ~AndroidContextCleanup();
+
+ private:
+  std::shared_ptr<AndroidContext> context_;
 };
 
 }  // namespace flutter

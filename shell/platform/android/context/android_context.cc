@@ -32,4 +32,14 @@ sk_sp<GrDirectContext> AndroidContext::GetMainSkiaContext() const {
   return main_context_;
 }
 
+AndroidContextCleanup::AndroidContextCleanup(
+    std::shared_ptr<AndroidContext> context)
+    : context_(context) {}
+
+AndroidContextCleanup::~AndroidContextCleanup() {
+  FML_LOG(ERROR) << "hey hey hey";
+  context_->RasterCleanup();
+  FML_LOG(ERROR) << "hey hey hey 2";
+}
+
 }  // namespace flutter

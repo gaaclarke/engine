@@ -125,6 +125,8 @@ class AndroidContextGL : public AndroidContext {
   ///
   EGLContext CreateNewContext() const;
 
+  void RasterCleanup() override;
+
  private:
   fml::RefPtr<AndroidEnvironmentGL> environment_;
   EGLConfig config_;

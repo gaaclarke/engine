@@ -65,20 +65,27 @@ PlatformViewAndroid::PlatformViewAndroid(
     std::shared_ptr<PlatformViewAndroidJNI> jni_facade,
     bool use_software_rendering,
     bool create_onscreen_surface)
-    : PlatformViewAndroid(delegate,
-                          std::move(task_runners),
-                          std::move(jni_facade),
-                          CreateAndroidContext(use_software_rendering,
-                                               create_onscreen_surface)) {}
+    : PlatformViewAndroid(
+          delegate,
+          std::move(task_runners),
+          std::move(jni_facade),
+          CreateAndroidContext(use_software_rendering, create_onscreen_surface),
+          nullptr) {
+  android_context_cleanup_ =
+      std::make_shared<AndroidContextCleanup>(android_context_);
+}
 
 PlatformViewAndroid::PlatformViewAndroid(
     PlatformView::Delegate& delegate,
     flutter::TaskRunners task_runners,
     const std::shared_ptr<PlatformViewAndroidJNI>& jni_facade,
-    const std::shared_ptr<flutter::AndroidContext>& android_context)
+    const std::shared_ptr<flutter::AndroidContext>& android_context,
+    const std::shared_ptr<flutter::AndroidContextCleanup>&
+        android_context_cleanup)
     : PlatformView(delegate, std::move(task_runners)),
       jni_facade_(jni_facade),
       android_context_(std::move(android_context)),
+      android_context_cleanup_(android_context_cleanup),
       platform_view_android_delegate_(jni_facade) {
   // TODO(dnfield): always create a pbuffer surface for background use to
   // resolve https://github.com/flutter/flutter/issues/73675
@@ -399,6 +406,11 @@ void PlatformViewAndroid::InstallFirstFrameCallback() {
 
 void PlatformViewAndroid::FireFirstFrameCallback() {
   jni_facade_->FlutterViewOnFirstFrame();
+}
+
+void PlatformViewAndroid::RasterCleanup() {
+  FML_DCHECK(android_context_cleanup_);
+  android_context_cleanup_.reset();
 }
 
 }  // namespace flutter

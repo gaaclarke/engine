@@ -210,16 +210,20 @@ std::unique_ptr<AndroidShellHolder> AndroidShellHolder::Spawn(
       android_platform_view->GetAndroidContext();
   FML_DCHECK(android_context);
 
+  std::shared_ptr<flutter::AndroidContextCleanup> android_context_cleanup =
+      android_platform_view->GetAndroidContextCleanup();
+
   // This is a synchronous call, so the captures don't have race checks.
   Shell::CreateCallback<PlatformView> on_create_platform_view =
-      [&jni_facade, android_context, &weak_platform_view](Shell& shell) {
+      [&jni_facade, android_context, android_context_cleanup,
+       &weak_platform_view](Shell& shell) {
         std::unique_ptr<PlatformViewAndroid> platform_view_android;
         platform_view_android = std::make_unique<PlatformViewAndroid>(
             shell,                   // delegate
             shell.GetTaskRunners(),  // task runners
             jni_facade,              // JNI interop
-            android_context          // Android context
-        );
+            android_context,         // Android context
+            android_context_cleanup);
         weak_platform_view = platform_view_android->GetWeakPtr();
         auto display = Display(jni_facade->GetDisplayRefreshRate());
         shell.OnDisplayUpdates(DisplayUpdateType::kStartup, {display});
