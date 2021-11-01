@@ -77,7 +77,7 @@ public class FlutterLoader {
    *
    * @param flutterJNI The {@link FlutterJNI} instance to use for loading the libflutter.so C++
    *     library, setting up the font manager, and calling into C++ initialization.
-   * @param executorService The {@link ExecutorService} to use when creating new threads.
+   * @param executorService The {@link ExecutorService} used to execute initialization steps.
    */
   public FlutterLoader(@NonNull FlutterJNI flutterJNI, @NonNull ExecutorService executorService) {
     this.flutterJNI = flutterJNI;
