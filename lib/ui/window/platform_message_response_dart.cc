@@ -55,10 +55,12 @@ void PostCompletion(Callback&& callback,
 PlatformMessageResponseDart::PlatformMessageResponseDart(
     tonic::DartPersistentValue callback,
     fml::RefPtr<fml::TaskRunner> ui_task_runner,
-    const std::string& channel)
+    const std::string& channel,
+    tonic::DartPersistentValue unmodifiable_wrapper)
     : callback_(std::move(callback)),
       ui_task_runner_(std::move(ui_task_runner)),
-      channel_(channel) {}
+      channel_(channel),
+      unmodifiable_wrapper_(std::move(unmodifiable_wrapper)) {}
 
 PlatformMessageResponseDart::~PlatformMessageResponseDart() {
   if (!callback_.is_empty()) {
@@ -70,7 +72,8 @@ PlatformMessageResponseDart::~PlatformMessageResponseDart() {
 void PlatformMessageResponseDart::Complete(std::unique_ptr<fml::Mapping> data) {
   PostCompletion(
       std::move(callback_), ui_task_runner_, &is_complete_, channel_,
-      [data = std::move(data)]() mutable {
+      [data = std::move(data),
+       unmodifiable_wrapper = std::move(unmodifiable_wrapper_)]() mutable {
         Dart_Handle byte_buffer;
         intptr_t size = data->GetSize();
         if (data->GetSize() > tonic::DartByteData::kExternalSizeThreshold) {
@@ -85,13 +88,8 @@ void PlatformMessageResponseDart::Complete(std::unique_ptr<fml::Mapping> data) {
         } else {
           Dart_Handle mutable_byte_buffer =
               tonic::DartByteData::Create(data->GetMapping(), data->GetSize());
-          Dart_Handle ui_lib = Dart_LookupLibrary(
-              tonic::DartConverter<std::string>().ToDart("dart:ui"));
-          FML_DCHECK(!(Dart_IsNull(ui_lib) || Dart_IsError(ui_lib)));
-          byte_buffer = Dart_Invoke(ui_lib,
-                                    tonic::DartConverter<std::string>().ToDart(
-                                        "_wrapUnmodifiableByteData"),
-                                    1, &mutable_byte_buffer);
+          byte_buffer = Dart_InvokeClosure(unmodifiable_wrapper.Get(), 1,
+                                           &mutable_byte_buffer);
           FML_DCHECK(!(Dart_IsNull(byte_buffer) || Dart_IsError(byte_buffer)));
         }
 

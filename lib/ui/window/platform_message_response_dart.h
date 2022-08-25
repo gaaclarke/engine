@@ -23,12 +23,14 @@ class PlatformMessageResponseDart : public PlatformMessageResponse {
   explicit PlatformMessageResponseDart(
       tonic::DartPersistentValue callback,
       fml::RefPtr<fml::TaskRunner> ui_task_runner,
-      const std::string& channel);
+      const std::string& channel,
+      tonic::DartPersistentValue unmodifiable_wrapper);
   ~PlatformMessageResponseDart() override;
 
   tonic::DartPersistentValue callback_;
   fml::RefPtr<fml::TaskRunner> ui_task_runner_;
   const std::string channel_;
+  tonic::DartPersistentValue unmodifiable_wrapper_;
 };
 
 }  // namespace flutter

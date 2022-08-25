@@ -184,6 +184,30 @@ tonic::DartErrorHandleType UIDartState::GetLastError() {
   return error;
 }
 
+Dart_Handle UIDartState::FindUnmodifiableByteDataWrapper() {
+  Dart_Handle ui_lib =
+      Dart_LookupLibrary(tonic::DartConverter<std::string>().ToDart("dart:ui"));
+  FML_DCHECK(!(Dart_IsNull(ui_lib) || Dart_IsError(ui_lib)));
+  Dart_Handle byte_wrapper_class = Dart_GetClass(
+      ui_lib, tonic::DartConverter<std::string>().ToDart("_ByteDataWrapper"));
+  FML_DCHECK(
+      !(Dart_IsNull(byte_wrapper_class) || Dart_IsError(byte_wrapper_class)));
+  Dart_Handle closure = Dart_GetStaticMethodClosure(
+      ui_lib, byte_wrapper_class,
+      tonic::DartConverter<std::string>().ToDart("_wrapUnmodifiableByteData"));
+  FML_DCHECK(!(Dart_IsNull(closure) || Dart_IsError(closure)));
+  return closure;
+}
+
+const std::unique_ptr<tonic::DartPersistentValue>&
+UIDartState::GetUnmodifiableByteDataWrapper() {
+  if (!unmodifiable_wrapper_) {
+    unmodifiable_wrapper_ = std::make_unique<tonic::DartPersistentValue>(
+        this, FindUnmodifiableByteDataWrapper());
+  }
+  return unmodifiable_wrapper_;
+}
+
 void UIDartState::LogMessage(const std::string& tag,
                              const std::string& message) const {
   if (log_message_callback_) {

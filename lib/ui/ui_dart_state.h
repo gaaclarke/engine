@@ -138,6 +138,12 @@ class UIDartState : public tonic::DartState {
 
   bool enable_skparagraph() const;
 
+  static Dart_Handle FindUnmodifiableByteDataWrapper();
+
+  /// Returns a closure that converts a ByteData to a UnmodifiableByteDataView.
+  const std::unique_ptr<tonic::DartPersistentValue>&
+  GetUnmodifiableByteDataWrapper();
+
   template <class T>
   static flutter::SkiaGPUObject<T> CreateGPUObject(sk_sp<T> object) {
     if (!object) {
@@ -187,6 +193,8 @@ class UIDartState : public tonic::DartState {
   const std::shared_ptr<IsolateNameServer> isolate_name_server_;
   const bool enable_skparagraph_;
   UIDartState::Context context_;
+  /// A closure that converts a ByteData to a UnmodifiableByteDataView.
+  std::unique_ptr<tonic::DartPersistentValue> unmodifiable_wrapper_;
 
   void AddOrRemoveTaskObserver(bool add);
 };

@@ -27,11 +27,15 @@ TEST_F(ShellTest, PlatformMessageResponseDart) {
   auto nativeCallPlatformMessageResponseDart =
       [ui_task_runner =
            task_runners.GetUITaskRunner()](Dart_NativeArguments args) {
-        auto dart_state = std::make_shared<tonic::DartState>();
+        UIDartState* dart_state = UIDartState::Current();
+        ASSERT_NE(dart_state, nullptr);
         auto response = fml::MakeRefCounted<PlatformMessageResponseDart>(
-            tonic::DartPersistentValue(tonic::DartState::Current(),
+            tonic::DartPersistentValue(dart_state,
                                        Dart_GetNativeArgument(args, 0)),
-            ui_task_runner, "foobar");
+            ui_task_runner, "foobar",
+            tonic::DartPersistentValue(
+                dart_state,
+                dart_state->GetUnmodifiableByteDataWrapper()->Get()));
         uint8_t* data = static_cast<uint8_t*>(malloc(100));
         auto mapping = std::make_unique<fml::MallocMapping>(data, 100);
         response->Complete(std::move(mapping));

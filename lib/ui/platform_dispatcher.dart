@@ -69,9 +69,11 @@ const double _kUnsetGestureSetting = -1.0;
 // See embedder.cc::kFlutterKeyDataChannel for more information.
 const String _kFlutterKeyDataChannel = 'flutter/keydata';
 
-@pragma('vm:entry-point')
-ByteData? _wrapUnmodifiableByteData(ByteData? byteData) =>
-    byteData == null ? null : UnmodifiableByteDataView(byteData);
+class _ByteDataWrapper {
+  @pragma('vm:entry-point')
+  static ByteData? _wrapUnmodifiableByteData(ByteData? byteData) =>
+      byteData == null ? null : UnmodifiableByteDataView(byteData);
+}
 
 /// Platform event dispatcher singleton.
 ///

@@ -33,7 +33,7 @@ static void BM_PlatformMessageResponseDartComplete(benchmark::State& state) {
   auto isolate =
       testing::RunDartCodeInIsolate(vm_ref, settings, task_runners, "main", {},
                                     testing::GetDefaultKernelFilePath(), {});
-
+  std::unique_ptr<tonic::DartPersistentValue> unmodifiable_wrapper;
   while (state.KeepRunning()) {
     state.PauseTiming();
     bool successful = isolate->RunInIsolateScope([&]() -> bool {
@@ -46,9 +46,16 @@ static void BM_PlatformMessageResponseDartComplete(benchmark::State& state) {
       Dart_Handle closure =
           Dart_GetField(library, Dart_NewStringFromCString("messageCallback"));
 
+      if (!unmodifiable_wrapper) {
+        unmodifiable_wrapper = std::make_unique<tonic::DartPersistentValue>(
+            isolate->get(), UIDartState::FindUnmodifiableByteDataWrapper());
+      }
+
       auto message = fml::MakeRefCounted<PlatformMessageResponseDart>(
           tonic::DartPersistentValue(isolate->get(), closure),
-          thread_host.ui_thread->GetTaskRunner(), "");
+          thread_host.ui_thread->GetTaskRunner(), "",
+          tonic::DartPersistentValue(isolate->get(),
+                                     unmodifiable_wrapper->Get()));
 
       message->Complete(std::move(mapping));
 
