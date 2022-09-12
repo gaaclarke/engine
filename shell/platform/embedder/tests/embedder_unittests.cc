@@ -62,16 +62,25 @@ TEST(EmbedderTestNoFixture, MustNotRunWithInvalidArgs) {
 }
 
 TEST_F(EmbedderTest, CanLaunchAndShutdownWithValidProjectArgs) {
+  FML_LOG(INFO) << "foo 0";
   auto& context = GetEmbedderContext(EmbedderTestContextType::kSoftwareContext);
+  FML_LOG(INFO) << "foo 1";
   fml::AutoResetWaitableEvent latch;
   context.AddIsolateCreateCallback([&latch]() { latch.Signal(); });
+  FML_LOG(INFO) << "foo 2";
   EmbedderConfigBuilder builder(context);
+  FML_LOG(INFO) << "foo 3";
   builder.SetSoftwareRendererConfig();
+  FML_LOG(INFO) << "foo 4";
   auto engine = builder.LaunchEngine();
+  FML_LOG(INFO) << "foo 5";
   ASSERT_TRUE(engine.is_valid());
   // Wait for the root isolate to launch.
+  FML_LOG(INFO) << "foo 6";
   latch.Wait();
+  FML_LOG(INFO) << "foo 7";
   engine.reset();
+  FML_LOG(INFO) << "foo 8";
 }
 
 // TODO(41999): Disabled because flaky.

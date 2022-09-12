@@ -12,16 +12,18 @@ class PlatformViewEmbedder::EmbedderPlatformMessageHandler
     : public PlatformMessageHandler {
  public:
   EmbedderPlatformMessageHandler(
-      PlatformViewEmbedder* parent,
+      fml::WeakPtr<PlatformView> parent,
       fml::RefPtr<fml::TaskRunner> platform_task_runner)
-      : parent_(std::make_shared<PlatformViewEmbedder*>(parent)),
-        platform_task_runner_(platform_task_runner) {}
+      : parent_(parent), platform_task_runner_(platform_task_runner) {
+    FML_LOG(INFO) << "aaclarke: EmbedderPlatformMessageHandler";
+  }
 
   virtual void HandlePlatformMessage(std::unique_ptr<PlatformMessage> message) {
+    FML_LOG(INFO) << "aaclarke: HandlePlatformMessage " << message->channel();
     platform_task_runner_->PostTask(fml::MakeCopyable(
         [parent = parent_, message = std::move(message)]() mutable {
-          if (parent && *parent) {
-            (*parent)->HandlePlatformMessage(std::move(message));
+          if (parent) {
+            parent->HandlePlatformMessage(std::move(message));
           } else {
             FML_DLOG(WARNING)
                 << "Dropping message on channel " << message->channel();
@@ -33,10 +35,8 @@ class PlatformViewEmbedder::EmbedderPlatformMessageHandler
       std::unique_ptr<fml::Mapping> mapping) {}
   virtual void InvokePlatformMessageEmptyResponseCallback(int response_id) {}
 
-  void ClearParent() { parent_.reset(); }
-
  private:
-  std::shared_ptr<PlatformViewEmbedder*> parent_;
+  fml::WeakPtr<PlatformView> parent_;
   fml::RefPtr<fml::TaskRunner> platform_task_runner_;
 };
 
@@ -52,8 +52,10 @@ PlatformViewEmbedder::PlatformViewEmbedder(
           std::make_unique<EmbedderSurfaceSoftware>(software_dispatch_table,
                                                     external_view_embedder_)),
       platform_dispatch_table_(platform_dispatch_table) {
+  FML_LOG(INFO) << "aaclarke: PlatformViewEmbedder 0";
   platform_message_handler_ = std::make_shared<EmbedderPlatformMessageHandler>(
-      this, task_runners_.GetPlatformTaskRunner());
+      this->GetWeakPtr(), task_runners_.GetPlatformTaskRunner());
+  FML_LOG(INFO) << "aaclarke: PlatformViewEmbedder 1";
 }
 
 #ifdef SHELL_ENABLE_GL
@@ -71,8 +73,10 @@ PlatformViewEmbedder::PlatformViewEmbedder(
                                               fbo_reset_after_present,
                                               external_view_embedder_)),
       platform_dispatch_table_(platform_dispatch_table) {
+  FML_LOG(INFO) << "aaclarke: PlatformViewEmbedder 2";
   platform_message_handler_ = std::make_shared<EmbedderPlatformMessageHandler>(
-      this, task_runners_.GetPlatformTaskRunner());
+      this->GetWeakPtr(), task_runners_.GetPlatformTaskRunner());
+  FML_LOG(INFO) << "aaclarke: PlatformViewEmbedder 3";
 }
 #endif
 
@@ -87,8 +91,10 @@ PlatformViewEmbedder::PlatformViewEmbedder(
       external_view_embedder_(external_view_embedder),
       embedder_surface_(std::move(embedder_surface)),
       platform_dispatch_table_(platform_dispatch_table) {
+  FML_LOG(INFO) << "aaclarke: PlatformViewEmbedder 4";
   platform_message_handler_ = std::make_shared<EmbedderPlatformMessageHandler>(
-      this, task_runners_.GetPlatformTaskRunner());
+      this->GetWeakPtr(), task_runners_.GetPlatformTaskRunner());
+  FML_LOG(INFO) << "aaclarke: PlatformViewEmbedder 5";
 }
 #endif
 
@@ -103,14 +109,12 @@ PlatformViewEmbedder::PlatformViewEmbedder(
       external_view_embedder_(external_view_embedder),
       embedder_surface_(std::move(embedder_surface)),
       platform_dispatch_table_(platform_dispatch_table) {
+  FML_LOG(INFO) << "aaclarke: PlatformViewEmbedder 6";
   platform_message_handler_ = std::make_shared<EmbedderPlatformMessageHandler>(
-      this, task_runners_.GetPlatformTaskRunner());
+      this->GetWeakPtr(), task_runners_.GetPlatformTaskRunner());
+  FML_LOG(INFO) << "aaclarke: PlatformViewEmbedder 7";
 }
 #endif
-
-PlatformViewEmbedder::~PlatformViewEmbedder() {
-  platform_message_handler_->ClearParent();
-}
 
 void PlatformViewEmbedder::UpdateSemantics(
     flutter::SemanticsNodeUpdates update,

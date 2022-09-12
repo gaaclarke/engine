@@ -659,6 +659,7 @@ bool Shell::Setup(std::unique_ptr<PlatformView> platform_view,
 
   platform_view_ = std::move(platform_view);
   platform_message_handler_ = platform_view_->GetPlatformMessageHandler();
+  FML_LOG(INFO) << "aaclarke: handler " << platform_message_handler_;
   route_messages_through_platform_thread_.store(true);
   task_runners_.GetPlatformTaskRunner()->PostTask(
       [self = weak_factory_.GetWeakPtr()] {

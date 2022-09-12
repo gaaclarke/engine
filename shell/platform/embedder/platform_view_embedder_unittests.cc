@@ -92,9 +92,17 @@ TEST(PlatformViewEmbedderTest, Dispatches) {
         did_call = true;
       };
   std::shared_ptr<EmbedderExternalViewEmbedder> external_view_embedder;
-  auto embedder = std::make_unique<PlatformViewEmbedder>(
-      delegate, task_runners, software_dispatch_table, platform_dispatch_table,
-      external_view_embedder);
+  std::unique_ptr<PlatformViewEmbedder> embedder;
+  {
+    fml::AutoResetWaitableEvent latch;
+    thread_host.platform_thread->GetTaskRunner()->PostTask([&] {
+      embedder = std::make_unique<PlatformViewEmbedder>(
+          delegate, task_runners, software_dispatch_table,
+          platform_dispatch_table, external_view_embedder);
+      latch.Signal();
+    });
+    latch.Wait();
+  }
   auto platform_message_handler = embedder->GetPlatformMessageHandler();
   fml::RefPtr<PlatformMessageResponse> response =
       fml::MakeRefCounted<MockResponse>();
@@ -102,10 +110,14 @@ TEST(PlatformViewEmbedderTest, Dispatches) {
       std::make_unique<PlatformMessage>("foo", response);
   platform_message_handler->HandlePlatformMessage(std::move(message));
 
-  fml::AutoResetWaitableEvent latch;
-  thread_host.platform_thread->GetTaskRunner()->PostTask(
-      [&latch] { latch.Signal(); });
-  latch.Wait();
+  {
+    fml::AutoResetWaitableEvent latch;
+    thread_host.platform_thread->GetTaskRunner()->PostTask([&] {
+      embedder.reset();
+      latch.Signal();
+    });
+    latch.Wait();
+  }
 
   EXPECT_TRUE(did_call);
 }
@@ -127,21 +139,40 @@ TEST(PlatformViewEmbedderTest, DeletionDisabledDispatch) {
         did_call = true;
       };
   std::shared_ptr<EmbedderExternalViewEmbedder> external_view_embedder;
-  auto embedder = std::make_unique<PlatformViewEmbedder>(
-      delegate, task_runners, software_dispatch_table, platform_dispatch_table,
-      external_view_embedder);
+  std::unique_ptr<PlatformViewEmbedder> embedder;
+  {
+    fml::AutoResetWaitableEvent latch;
+    thread_host.platform_thread->GetTaskRunner()->PostTask([&] {
+      embedder = std::make_unique<PlatformViewEmbedder>(
+          delegate, task_runners, software_dispatch_table,
+          platform_dispatch_table, external_view_embedder);
+      latch.Signal();
+    });
+    latch.Wait();
+  }
+
   auto platform_message_handler = embedder->GetPlatformMessageHandler();
-  embedder.reset();
+  {
+    fml::AutoResetWaitableEvent latch;
+    thread_host.platform_thread->GetTaskRunner()->PostTask([&] {
+      embedder.reset();
+      latch.Signal();
+    });
+    latch.Wait();
+  }
+
   fml::RefPtr<PlatformMessageResponse> response =
       fml::MakeRefCounted<MockResponse>();
   std::unique_ptr<PlatformMessage> message =
       std::make_unique<PlatformMessage>("foo", response);
   platform_message_handler->HandlePlatformMessage(std::move(message));
 
-  fml::AutoResetWaitableEvent latch;
-  thread_host.platform_thread->GetTaskRunner()->PostTask(
-      [&latch] { latch.Signal(); });
-  latch.Wait();
+  {
+    fml::AutoResetWaitableEvent latch;
+    thread_host.platform_thread->GetTaskRunner()->PostTask(
+        [&latch] { latch.Signal(); });
+    latch.Wait();
+  }
 
   EXPECT_FALSE(did_call);
 }

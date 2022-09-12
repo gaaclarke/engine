@@ -90,8 +90,6 @@ class PlatformViewEmbedder final : public PlatformView {
       std::shared_ptr<EmbedderExternalViewEmbedder> external_view_embedder);
 #endif
 
-  ~PlatformViewEmbedder() override;
-
   // |PlatformView|
   void UpdateSemantics(
       flutter::SemanticsNodeUpdates update,
@@ -100,7 +98,7 @@ class PlatformViewEmbedder final : public PlatformView {
   // |PlatformView|
   void HandlePlatformMessage(std::unique_ptr<PlatformMessage> message) override;
 
-  // |PlatformView|
+  // // |PlatformView|
   std::shared_ptr<PlatformMessageHandler> GetPlatformMessageHandler()
       const override;
 
