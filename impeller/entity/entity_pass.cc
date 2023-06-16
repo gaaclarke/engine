@@ -254,6 +254,7 @@ bool EntityPass::Render(ContentContext& renderer,
     }
 
     auto command_buffer = renderer.GetContext()->CreateCommandBuffer();
+    command_buffer->SetPooled();
     command_buffer->SetLabel("EntityPass Root Command Buffer");
 
     // If the context supports blitting, blit the offscreen texture to the

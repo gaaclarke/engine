@@ -23,6 +23,8 @@ class CommandBufferVK final
 
   const std::shared_ptr<CommandEncoderVK>& GetEncoder() const;
 
+  void SetPooled() override;
+
  private:
   friend class ContextVK;
 

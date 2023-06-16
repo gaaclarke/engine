@@ -65,6 +65,10 @@ class CommandEncoderVK {
   std::optional<vk::DescriptorSet> AllocateDescriptorSet(
       const vk::DescriptorSetLayout& layout);
 
+  static void FlushPool(int32_t ident);
+
+  void SetPooled() { is_pooled_ = true; }
+
  private:
   friend class ContextVK;
 
@@ -73,6 +77,7 @@ class CommandEncoderVK {
   std::shared_ptr<FenceWaiterVK> fence_waiter_;
   std::shared_ptr<TrackedObjectsVK> tracked_objects_;
   bool is_valid_ = false;
+  bool is_pooled_ = false;
 
   void Reset();
 

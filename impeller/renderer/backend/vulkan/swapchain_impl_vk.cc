@@ -328,6 +328,8 @@ SwapchainImplVK::AcquireResult SwapchainImplVK::AcquireNextDrawable() {
     return {};
   }
 
+  CommandEncoderVK::FlushPool(current_frame_);
+
   //----------------------------------------------------------------------------
   /// Get the next image index.
   ///

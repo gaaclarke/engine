@@ -125,6 +125,15 @@ bool CommandEncoderVK::IsValid() const {
   return is_valid_;
 }
 
+static std::vector<std::vector<std::shared_ptr<TrackedObjectsVK>>> g_pool(100);
+static std::atomic<int32_t> g_current_pool = 0;
+
+void CommandEncoderVK::FlushPool(int32_t ident) {
+  assert(ident < 100);
+  g_pool[ident].clear();
+  g_current_pool.store(ident);
+}
+
 bool CommandEncoderVK::Submit(SubmitCallback callback) {
   // Make sure to call callback with `false` if anything returns early.
   bool fail_callback = !!callback;
@@ -154,29 +163,44 @@ bool CommandEncoderVK::Submit(SubmitCallback callback) {
   if (!strong_device) {
     return false;
   }
-  auto [fence_result, fence] = strong_device->GetDevice().createFenceUnique({});
-  if (fence_result != vk::Result::eSuccess) {
-    return false;
+
+  if (!is_pooled_) {
+    auto [fence_result, fence] =
+        strong_device->GetDevice().createFenceUnique({});
+    if (fence_result != vk::Result::eSuccess) {
+      return false;
+    }
+
+    vk::SubmitInfo submit_info;
+    std::vector<vk::CommandBuffer> buffers = {command_buffer};
+    submit_info.setCommandBuffers(buffers);
+    if (queue_->Submit(submit_info, *fence) != vk::Result::eSuccess) {
+      return false;
+    }
+
+    // Submit will proceed, call callback with true when it is done and do not
+    // call when `reset` is collected.
+    fail_callback = false;
+
+    return fence_waiter_->AddFence(
+        std::move(fence),
+        [callback, tracked_objects = std::move(tracked_objects_)] {
+          if (callback) {
+            callback(true);
+          }
+        });
+  } else {
+    assert(callback == nullptr);
+    vk::SubmitInfo submit_info;
+    std::vector<vk::CommandBuffer> buffers = {command_buffer};
+    submit_info.setCommandBuffers(buffers);
+    if (queue_->Submit(submit_info, nullptr) != vk::Result::eSuccess) {
+      return false;
+    }
+    g_pool[g_current_pool.load()].emplace_back(std::move(tracked_objects_));
+
+    return true;
   }
-
-  vk::SubmitInfo submit_info;
-  std::vector<vk::CommandBuffer> buffers = {command_buffer};
-  submit_info.setCommandBuffers(buffers);
-  if (queue_->Submit(submit_info, *fence) != vk::Result::eSuccess) {
-    return false;
-  }
-
-  // Submit will proceed, call callback with true when it is done and do not
-  // call when `reset` is collected.
-  fail_callback = false;
-
-  return fence_waiter_->AddFence(
-      std::move(fence),
-      [callback, tracked_objects = std::move(tracked_objects_)] {
-        if (callback) {
-          callback(true);
-        }
-      });
 }
 
 vk::CommandBuffer CommandEncoderVK::GetCommandBuffer() const {

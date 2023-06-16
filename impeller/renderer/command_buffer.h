@@ -66,6 +66,8 @@ class CommandBuffer {
 
   [[nodiscard]] bool SubmitCommands();
 
+  virtual void SetPooled() {}
+
   //----------------------------------------------------------------------------
   /// @brief      Schedule the command encoded by render passes within this
   ///             command buffer on the GPU. The enqueing of this buffer is

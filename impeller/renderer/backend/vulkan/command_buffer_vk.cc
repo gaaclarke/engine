@@ -103,4 +103,8 @@ std::shared_ptr<ComputePass> CommandBufferVK::OnCreateComputePass() const {
   return pass;
 }
 
+void CommandBufferVK::SetPooled() {
+  encoder_->SetPooled();
+}
+
 }  // namespace impeller

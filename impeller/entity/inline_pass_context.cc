@@ -85,6 +85,7 @@ InlinePassContext::RenderPassResult InlinePassContext::GetRenderPass(
     VALIDATION_LOG << "Could not create command buffer.";
     return {};
   }
+  command_buffer_->SetPooled();
 
   if (pass_target_.GetRenderTarget().GetColorAttachments().empty()) {
     VALIDATION_LOG << "Color attachment unexpectedly missing from the "
