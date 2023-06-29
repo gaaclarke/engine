@@ -206,11 +206,14 @@ static VmaAllocationCreateFlags ToVmaAllocationCreateFlags(StorageMode mode,
   FML_UNREACHABLE();
 }
 
+namespace {}
+
 class AllocatedTextureSourceVK final : public TextureSourceVK {
  public:
   AllocatedTextureSourceVK(const TextureDescriptor& desc,
                            VmaAllocator allocator,
-                           vk::Device device)
+                           vk::Device device,
+                           std::unique_ptr<VmaPool>& swapchain_pool)
       : TextureSourceVK(desc) {
     vk::ImageCreateInfo image_info;
     image_info.flags = ToVKImageCreateFlags(desc.type);
@@ -242,6 +245,39 @@ class AllocatedTextureSourceVK final : public TextureSourceVK {
     VkImage vk_image = VK_NULL_HANDLE;
     VmaAllocation allocation = {};
     VmaAllocationInfo allocation_info = {};
+    if (desc.usage &
+        static_cast<TextureUsageMask>(TextureUsage::kSwapChainWrapper)) {
+      if (!swapchain_pool) {
+        auto create_info_native =
+            static_cast<vk::ImageCreateInfo::NativeType>(image_info);
+
+        VmaAllocationCreateInfo sampleAllocCreateInfo = {};
+        sampleAllocCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
+        sampleAllocCreateInfo.preferredFlags =
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+
+        uint32_t memTypeIndex;
+        VkResult res = vmaFindMemoryTypeIndexForImageInfo(
+            allocator, &create_info_native, &sampleAllocCreateInfo,
+            &memTypeIndex);
+
+        VmaPoolCreateInfo poolCreateInfo = {};
+        poolCreateInfo.memoryTypeIndex = memTypeIndex;
+        poolCreateInfo.blockSize = 3 * 4 * desc.size.width * desc.size.height;
+        poolCreateInfo.flags = VMA_POOL_CREATE_LINEAR_ALGORITHM_BIT;
+
+        auto swapchain_pool_result = std::make_unique<VmaPool>();
+        vk::Result result = vk::Result{vmaCreatePool(
+            allocator, &poolCreateInfo, swapchain_pool_result.get())};
+        if (result != vk::Result::eSuccess) {
+          VALIDATION_LOG << "Could not create memory allocator";
+          return;
+        }
+        swapchain_pool = std::move(swapchain_pool_result);
+      }
+      alloc_nfo.preferredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+      alloc_nfo.pool = *swapchain_pool;
+    }
     {
       auto result = vk::Result{::vmaCreateImage(allocator,            //
                                                 &create_info_native,  //
@@ -337,9 +373,10 @@ std::shared_ptr<Texture> AllocatorVK::OnCreateTexture(
     return nullptr;
   }
   auto source =
-      std::make_shared<AllocatedTextureSourceVK>(desc,                       //
-                                                 allocator_,                 //
-                                                 device_holder->GetDevice()  //
+      std::make_shared<AllocatedTextureSourceVK>(desc,        //
+                                                 allocator_,  //
+                                                 device_holder->GetDevice(),
+                                                 swapchain_pool_  //
       );
   if (!source->IsValid()) {
     return nullptr;

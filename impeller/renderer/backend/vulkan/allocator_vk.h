@@ -31,6 +31,7 @@ class AllocatorVK final : public Allocator {
   std::weak_ptr<DeviceHolder> device_holder_;
   ISize max_texture_size_;
   bool is_valid_ = false;
+  std::unique_ptr<VmaPool> swapchain_pool_;
 
   AllocatorVK(std::weak_ptr<Context> context,
               uint32_t vulkan_api_version,

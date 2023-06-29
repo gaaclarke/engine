@@ -271,6 +271,7 @@ enum class TextureUsage : TextureUsageMask {
   kShaderRead = 1 << 0,
   kShaderWrite = 1 << 1,
   kRenderTarget = 1 << 2,
+  kSwapChainWrapper = 1 << 3,
 };
 
 constexpr bool TextureUsageIsRenderTarget(TextureUsageMask mask) {
@@ -287,6 +288,8 @@ constexpr const char* TextureUsageToString(TextureUsage usage) {
       return "ShaderWrite";
     case TextureUsage::kRenderTarget:
       return "RenderTarget";
+    case TextureUsage::kSwapChainWrapper:
+      return "SwapChainWrapper";
   }
   FML_UNREACHABLE();
 }

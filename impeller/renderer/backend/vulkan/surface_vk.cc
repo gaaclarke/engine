@@ -24,7 +24,8 @@ std::unique_ptr<SurfaceVK> SurfaceVK::WrapSwapchainImage(
   msaa_tex_desc.sample_count = SampleCount::kCount4;
   msaa_tex_desc.format = swapchain_image->GetPixelFormat();
   msaa_tex_desc.size = swapchain_image->GetSize();
-  msaa_tex_desc.usage = static_cast<uint64_t>(TextureUsage::kRenderTarget);
+  msaa_tex_desc.usage = static_cast<uint64_t>(TextureUsage::kSwapChainWrapper) |
+                        static_cast<uint64_t>(TextureUsage::kRenderTarget);
 
   auto msaa_tex = context->GetResourceAllocator()->CreateTexture(msaa_tex_desc);
   if (!msaa_tex) {
