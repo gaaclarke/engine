@@ -77,12 +77,9 @@ struct TRect {
     return TRect::MakeLTRB(-1E9, -1E9, 1E9, 1E9);
   }
 
-  constexpr static TRect MakeMaximum() {
-    return TRect::MakeLTRB(-std::numeric_limits<Type>::infinity(),
-                           -std::numeric_limits<Type>::infinity(),
-                           std::numeric_limits<Type>::infinity(),
-                           std::numeric_limits<Type>::infinity());
-  }
+  static const TRect<Type> kMaximum;
+
+  constexpr static TRect MakeMaximum() { return kMaximum; }
 
   template <class U>
   constexpr explicit TRect(const TRect<U>& other)
@@ -137,7 +134,7 @@ struct TRect {
 
   constexpr bool IsEmpty() const { return size.IsEmpty(); }
 
-  constexpr bool IsMaximum() const { return *this == MakeMaximum(); }
+  constexpr bool IsMaximum() const { return *this == kMaximum; }
 
   constexpr auto GetLeft() const {
     if (IsMaximum()) {
@@ -310,6 +307,13 @@ struct TRect {
 
 using Rect = TRect<Scalar>;
 using IRect = TRect<int64_t>;
+
+template <typename Type>
+const TRect<Type> TRect<Type>::kMaximum =
+    TRect<Type>::MakeLTRB(-std::numeric_limits<Type>::infinity(),
+                          -std::numeric_limits<Type>::infinity(),
+                          std::numeric_limits<Type>::infinity(),
+                          std::numeric_limits<Type>::infinity());
 
 }  // namespace impeller
 
