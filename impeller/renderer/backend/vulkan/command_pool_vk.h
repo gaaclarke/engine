@@ -41,14 +41,9 @@ class CommandPoolVK {
   const std::thread::id owner_id_;
   std::weak_ptr<const DeviceHolder> device_holder_;
   vk::UniqueCommandPool graphics_pool_;
-  Mutex buffers_to_collect_mutex_;
-  std::vector<vk::UniqueCommandBuffer> buffers_to_collect_
-      IPLR_GUARDED_BY(buffers_to_collect_mutex_);
   bool is_valid_ = false;
 
   explicit CommandPoolVK(const ContextVK* context);
-
-  void GarbageCollectBuffersIfAble() IPLR_REQUIRES(buffers_to_collect_mutex_);
 
   FML_DISALLOW_COPY_AND_ASSIGN(CommandPoolVK);
 };

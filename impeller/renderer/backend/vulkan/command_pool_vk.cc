@@ -72,8 +72,7 @@ CommandPoolVK::CommandPoolVK(const ContextVK* context)
   vk::CommandPoolCreateInfo pool_info;
 
   pool_info.queueFamilyIndex = context->GetGraphicsQueue()->GetIndex().family;
-  pool_info.flags = vk::CommandPoolCreateFlagBits::eTransient |
-                    vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
+  pool_info.flags = vk::CommandPoolCreateFlagBits::eTransient;
   auto pool = context->GetDevice().createCommandPoolUnique(pool_info);
   if (pool.result != vk::Result::eSuccess) {
     return;
@@ -91,16 +90,7 @@ bool CommandPoolVK::IsValid() const {
 }
 
 void CommandPoolVK::Reset() {
-  Lock lock(buffers_to_collect_mutex_);
   graphics_pool_.reset();
-
-  // When the command pool is destroyed, all of its command buffers are freed.
-  // Handles allocated from that pool are now invalid and must be discarded.
-  for (vk::UniqueCommandBuffer& buffer : buffers_to_collect_) {
-    buffer.release();
-  }
-  buffers_to_collect_.clear();
-
   is_valid_ = false;
 }
 
@@ -113,13 +103,7 @@ vk::UniqueCommandBuffer CommandPoolVK::CreateGraphicsCommandBuffer() {
   if (!strong_device) {
     return {};
   }
-  if (std::this_thread::get_id() != owner_id_) {
-    return {};
-  }
-  {
-    Lock lock(buffers_to_collect_mutex_);
-    GarbageCollectBuffersIfAble();
-  }
+  FML_DCHECK(std::this_thread::get_id() == owner_id_);
   vk::CommandBufferAllocateInfo alloc_info;
   alloc_info.commandPool = graphics_pool_.get();
   alloc_info.commandBufferCount = 1u;
@@ -134,21 +118,12 @@ vk::UniqueCommandBuffer CommandPoolVK::CreateGraphicsCommandBuffer() {
 
 void CommandPoolVK::CollectGraphicsCommandBuffer(
     vk::UniqueCommandBuffer buffer) {
-  Lock lock(buffers_to_collect_mutex_);
   if (!graphics_pool_) {
     // If the command pool has already been destroyed, then its command buffers
     // have been freed and are now invalid.
     buffer.release();
   }
-  buffers_to_collect_.emplace_back(std::move(buffer));
-  GarbageCollectBuffersIfAble();
-}
-
-void CommandPoolVK::GarbageCollectBuffersIfAble() {
-  if (std::this_thread::get_id() != owner_id_) {
-    return;
-  }
-  buffers_to_collect_.clear();
+  buffer.reset();
 }
 
 }  // namespace impeller
