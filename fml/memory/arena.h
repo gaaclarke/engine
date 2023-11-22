@@ -17,9 +17,10 @@ class Arena {
 
   ~Arena();
 
-  template<typename T>
+  template <typename T>
   T* Allocate(size_t count) {
-    static_assert(std::is_trivially_destructible<T>::value, "T must be trivially destructible");
+    static_assert(std::is_trivially_destructible<T>::value,
+                  "T must be trivially destructible");
     return static_cast<T*>(RawAllocate(sizeof(T) * count));
   }
 
@@ -34,26 +35,25 @@ class Arena {
   uint8_t* position_;
 };
 
-template<typename T>
+template <typename T>
 class ArenaAllocator {
-public:
+ public:
   typedef T value_type;
-  static_assert(std::is_trivially_destructible<T>::value, "T must be trivially destructible");
+  static_assert(std::is_trivially_destructible<T>::value,
+                "T must be trivially destructible");
 
   ArenaAllocator(Arena& arena) : arena_(arena) {}
 
-  T* allocate(size_t n) {
-    return static_cast<T*>(arena_.Allocate<T>(n));
-  }
+  T* allocate(size_t n) { return static_cast<T*>(arena_.Allocate<T>(n)); }
 
   void deallocate(T* ptr, size_t n) {
     // noop, the ~Arena will delete it.
   }
 
-private:
+ private:
   Arena& arena_;
 };
 
 }  // namespace fml
 
-#endif // FLUTTER_FML_MEMORY_ARENA_H_
+#endif  // FLUTTER_FML_MEMORY_ARENA_H_

@@ -40,7 +40,9 @@ ContentContext& AiksContext::GetContentContext() const {
   return *content_context_;
 }
 
-bool AiksContext::Render(const Picture& picture, fml::Arena* arena, RenderTarget& render_target) {
+bool AiksContext::Render(const Picture& picture,
+                         fml::Arena* arena,
+                         RenderTarget& render_target) {
   if (!IsValid()) {
     return false;
   }

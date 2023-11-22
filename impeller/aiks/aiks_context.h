@@ -7,11 +7,11 @@
 #include <memory>
 
 #include "flutter/fml/macros.h"
+#include "flutter/fml/memory/arena.h"
 #include "impeller/entity/contents/content_context.h"
 #include "impeller/renderer/context.h"
 #include "impeller/renderer/render_target.h"
 #include "impeller/typographer/typographer_context.h"
-#include "flutter/fml/memory/arena.h"
 
 namespace impeller {
 
@@ -40,7 +40,9 @@ class AiksContext {
 
   ContentContext& GetContentContext() const;
 
-  bool Render(const Picture& picture, fml::Arena* arena, RenderTarget& render_target);
+  bool Render(const Picture& picture,
+              fml::Arena* arena,
+              RenderTarget& render_target);
 
  private:
   std::shared_ptr<Context> context_;

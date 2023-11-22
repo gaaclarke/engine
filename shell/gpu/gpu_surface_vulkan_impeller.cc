@@ -92,7 +92,8 @@ std::unique_ptr<SurfaceFrame> GPUSurfaceVulkanImpeller::AcquireFrame(
         return renderer->Render(
             std::move(surface),
             fml::MakeCopyable(
-                [aiks_context, picture = std::move(picture), arena = surface_frame.submit_info().arena](
+                [aiks_context, picture = std::move(picture),
+                 arena = surface_frame.submit_info().arena](
                     impeller::RenderTarget& render_target) -> bool {
                   return aiks_context->Render(picture, arena, render_target);
                 }));

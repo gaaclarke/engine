@@ -3,11 +3,10 @@
 // found in the LICENSE file.
 
 #include "flutter/fml/macros.h"
-#include "gtest/gtest.h"
 #include "flutter/fml/memory/arena.h"
+#include "gtest/gtest.h"
 
-
-TEST(Arena, StdVector) {  
+TEST(Arena, StdVector) {
   fml::Arena arena(1024);
   fml::ArenaAllocator<int> allocator(arena);
   std::vector<int, fml::ArenaAllocator<int>> ints(allocator);
