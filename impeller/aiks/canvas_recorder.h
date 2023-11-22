@@ -32,6 +32,7 @@ enum CanvasRecorderOp : uint16_t {
   kRotate,
   kDrawPath,
   kDrawPaint,
+  kDrawLine,
   kDrawRect,
   kDrawRRect,
   kDrawCircle,
@@ -176,6 +177,10 @@ class CanvasRecorder {
 
   void DrawPaint(const Paint& paint) {
     return ExecuteAndSerialize(FLT_CANVAS_RECORDER_OP_ARG(DrawPaint), paint);
+  }
+
+  void DrawLine(const Point& p0, const Point& p1, const Paint& paint) {
+    return ExecuteAndSerialize(FLT_CANVAS_RECORDER_OP_ARG(DrawLine), p0, p1, paint);
   }
 
   void DrawRect(Rect rect, const Paint& paint) {
