@@ -105,7 +105,8 @@ bool EmbedderExternalView::Render(const EmbedderRenderTarget& render_target) {
 
     auto dispatcher = impeller::DlDispatcher();
     dispatcher.drawDisplayList(dl_builder.Build(), 1);
-    return aiks_context->Render(dispatcher.EndRecordingAsPicture(),
+    fml::Arena arena(1024);
+    return aiks_context->Render(dispatcher.EndRecordingAsPicture(), &arena,
                                 *impeller_target);
   }
 #endif  // IMPELLER_SUPPORTS_RENDERING

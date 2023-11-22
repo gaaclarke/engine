@@ -298,6 +298,7 @@ uint32_t EntityPass::GetTotalPassReads(ContentContext& renderer) const {
 }
 
 bool EntityPass::Render(ContentContext& renderer,
+                        fml::Arena* arena,
                         const RenderTarget& render_target) const {
   auto capture =
       renderer.GetContext()->capture.GetDocument(kCaptureDocumentName);

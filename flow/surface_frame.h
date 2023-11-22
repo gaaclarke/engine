@@ -12,6 +12,7 @@
 #include "flutter/display_list/dl_builder.h"
 #include "flutter/display_list/skia/dl_sk_canvas.h"
 #include "flutter/fml/macros.h"
+#include "flutter/fml/memory/arena.h"
 #include "flutter/fml/time/time_point.h"
 
 #include "third_party/skia/include/core/SkCanvas.h"
@@ -80,6 +81,8 @@ class SurfaceFrame {
     // Time at which this frame is scheduled to be presented. This is a hint
     // that can be passed to the platform to drop queued frames.
     std::optional<fml::TimePoint> presentation_time;
+
+    fml::Arena* arena = nullptr;
   };
 
   bool Submit();

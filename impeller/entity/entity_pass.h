@@ -10,6 +10,7 @@
 #include <optional>
 #include <vector>
 
+#include "flutter/fml/memory/arena.h"
 #include "impeller/entity/contents/contents.h"
 #include "impeller/entity/contents/filters/filter_contents.h"
 #include "impeller/entity/entity.h"
@@ -91,6 +92,7 @@ class EntityPass {
   EntityPass* GetSuperpass() const;
 
   bool Render(ContentContext& renderer,
+              fml::Arena* arena,
               const RenderTarget& render_target) const;
 
   /// @brief  Iterate all elements (entities and subpasses) in this pass,

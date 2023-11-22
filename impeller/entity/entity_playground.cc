@@ -31,7 +31,8 @@ bool EntityPlayground::OpenPlaygroundHere(EntityPass& entity_pass) {
   }
 
   auto callback = [&](RenderTarget& render_target) -> bool {
-    return entity_pass.Render(content_context, render_target);
+    fml::Arena arena(1024);
+    return entity_pass.Render(content_context, &arena, render_target);
   };
   return Playground::OpenPlaygroundHere(callback);
 }

@@ -48,7 +48,8 @@ bool DlPlayground::OpenPlaygroundHere(DisplayListPlaygroundCallback callback) {
         list->Dispatch(dispatcher);
         auto picture = dispatcher.EndRecordingAsPicture();
 
-        return context.Render(picture, render_target);
+        fml::Arena arena(1024);
+        return context.Render(picture, &arena, render_target);
       });
 }
 

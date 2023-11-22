@@ -84,7 +84,8 @@ std::shared_ptr<Texture> Picture::RenderToTexture(
     return nullptr;
   }
 
-  if (!context.Render(*this, target)) {
+  fml::Arena arena(1024);
+  if (!context.Render(*this, &arena, target)) {
     VALIDATION_LOG << "Could not render Picture to Texture.";
     return nullptr;
   }

@@ -161,9 +161,10 @@ std::unique_ptr<SurfaceFrame> GPUSurfaceMetalImpeller::AcquireFrameFromCAMetalLa
 
         return renderer->Render(
             std::move(surface),
-            fml::MakeCopyable([aiks_context, picture = std::move(picture)](
+            fml::MakeCopyable([aiks_context, picture = std::move(picture),
+                               arena = surface_frame.submit_info().arena](
                                   impeller::RenderTarget& render_target) -> bool {
-              return aiks_context->Render(picture, render_target);
+              return aiks_context->Render(picture, arena, render_target);
             }));
       });
 
@@ -259,9 +260,10 @@ std::unique_ptr<SurfaceFrame> GPUSurfaceMetalImpeller::AcquireFrameFromMTLTextur
 
         bool render_result =
             renderer->Render(std::move(surface),
-                             fml::MakeCopyable([aiks_context, picture = std::move(picture)](
+                             fml::MakeCopyable([aiks_context, picture = std::move(picture),
+                                                arena = surface_frame.submit_info().arena](
                                                    impeller::RenderTarget& render_target) -> bool {
-                               return aiks_context->Render(picture, render_target);
+                               return aiks_context->Render(picture, arena, render_target);
                              }));
         if (!render_result) {
           FML_LOG(ERROR) << "Failed to render Impeller frame";

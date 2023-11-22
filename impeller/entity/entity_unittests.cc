@@ -2467,7 +2467,8 @@ TEST_P(EntityTest, AdvancedBlendCoverageHintIsNotResetByEntityPass) {
       GetContext(), TypographerContextSkia::Make(), test_allocator);
   pass->AddEntity(entity);
 
-  EXPECT_TRUE(pass->Render(content_context, rt));
+  fml::Arena arena(1024);
+  EXPECT_TRUE(pass->Render(content_context, &arena, rt));
 
   if (test_allocator->GetDescriptors().size() == 6u) {
     EXPECT_EQ(test_allocator->GetDescriptors()[0].size, ISize(1000, 1000));

@@ -53,7 +53,8 @@ bool AiksPlayground::OpenPlaygroundHere(AiksPlaygroundCallback callback) {
         if (!picture.has_value()) {
           return false;
         }
-        return renderer.Render(*picture, render_target);
+        fml::Arena arena(1024);
+        return renderer.Render(*picture, &arena, render_target);
       });
 }
 

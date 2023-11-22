@@ -741,8 +741,10 @@ DrawSurfaceStatus Rasterizer::DrawToSurfaceUnsafe(
       return DrawSurfaceStatus::kRetry;
     }
 
-    SurfaceFrame::SubmitInfo submit_info;
-    submit_info.presentation_time = presentation_time;
+    SurfaceFrame::SubmitInfo submit_info = {
+      .presentation_time = presentation_time,
+      .arena = &arena,
+    };
     if (damage) {
       submit_info.frame_damage = damage->GetFrameDamage();
       submit_info.buffer_damage = damage->GetBufferDamage();
