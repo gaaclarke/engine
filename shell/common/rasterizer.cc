@@ -12,6 +12,7 @@
 #include "flutter/common/constants.h"
 #include "flutter/common/graphics/persistent_cache.h"
 #include "flutter/flow/layers/offscreen_surface.h"
+#include "flutter/fml/memory/arena.h"
 #include "flutter/fml/time/time_delta.h"
 #include "flutter/fml/time/time_point.h"
 #include "flutter/shell/common/base64.h"
@@ -729,8 +730,10 @@ DrawSurfaceStatus Rasterizer::DrawToSurfaceUnsafe(
       ignore_raster_cache = false;
     }
 
+    fml::Arena arena(1024);
     RasterStatus frame_status =
-        compositor_frame->Raster(layer_tree,           // layer tree
+        compositor_frame->Raster(arena,
+                                 layer_tree,           // layer tree
                                  ignore_raster_cache,  // ignore raster cache
                                  damage.get()          // frame damage
         );
@@ -794,7 +797,10 @@ static sk_sp<SkData> ScreenshotLayerTreeAsPicture(
   auto frame = compositor_context.AcquireFrame(nullptr, &canvas, nullptr,
                                                root_surface_transformation,
                                                false, true, nullptr, nullptr);
-  frame->Raster(*tree, true, nullptr);
+
+  fml::Arena arena(1024);
+  frame->Raster(arena, *tree, /*ignore_raster_cache=*/true,
+                /*frame_damage=*/nullptr);
 
 #if defined(OS_FUCHSIA)
   SkSerialProcs procs = {0};
@@ -855,7 +861,9 @@ sk_sp<SkData> Rasterizer::ScreenshotLayerTreeAsImage(
       nullptr                       // aiks context
   );
   canvas->Clear(DlColor::kTransparent());
-  frame->Raster(*tree, true, nullptr);
+  fml::Arena arena(1024);
+  frame->Raster(arena, *tree, /*ignore_raster_cache=*/true,
+                /*frame_damage=*/nullptr);
   canvas->Flush();
 
   return snapshot_surface->GetRasterData(compressed);

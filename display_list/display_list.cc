@@ -168,6 +168,7 @@ void DisplayList::Dispatch(DlOpReceiver& receiver,
   std::vector<int> rect_indices;
   rtree->search(cull_rect, &rect_indices);
   VectorCuller culler(rtree, rect_indices);
+  FML_LOG(ERROR) << "foo: " << rect_indices.size();
   Dispatch(receiver, ptr, ptr + byte_count_, culler);
 }
 

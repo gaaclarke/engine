@@ -13,6 +13,7 @@
 #include "flutter/flow/layers/layer.h"
 #include "flutter/flow/raster_cache.h"
 #include "flutter/fml/macros.h"
+#include "flutter/fml/memory/arena.h"
 #include "flutter/fml/time/time_delta.h"
 
 class GrDirectContext;
@@ -47,6 +48,7 @@ class LayerTree {
       bool ignore_raster_cache = false);
 
   void Paint(CompositorContext::ScopedFrame& frame,
+             fml::Arena& arena,
              bool ignore_raster_cache = false) const;
 
   sk_sp<DisplayList> Flatten(

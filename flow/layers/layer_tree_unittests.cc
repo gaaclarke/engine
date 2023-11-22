@@ -52,7 +52,8 @@ TEST_F(LayerTreeTest, PaintingEmptyLayerDies) {
   EXPECT_EQ(layer->paint_bounds(), SkRect::MakeEmpty());
   EXPECT_TRUE(layer->is_empty());
 
-  layer_tree->Paint(frame());
+  fml::Arena arena(1024);
+  layer_tree->Paint(frame(), arena);
 }
 
 TEST_F(LayerTreeTest, PaintBeforePrerollDies) {
@@ -71,7 +72,8 @@ TEST_F(LayerTreeTest, PaintBeforePrerollDies) {
   EXPECT_TRUE(mock_layer->is_empty());
   EXPECT_TRUE(layer->is_empty());
 
-  layer_tree->Paint(frame());
+  fml::Arena arena(1024);
+  layer_tree->Paint(frame(), arena);
   EXPECT_EQ(mock_canvas().draw_calls(), std::vector<MockCanvas::DrawCall>());
 }
 
@@ -93,7 +95,8 @@ TEST_F(LayerTreeTest, Simple) {
   EXPECT_FALSE(layer->is_empty());
   EXPECT_EQ(mock_layer->parent_matrix(), root_transform());
 
-  layer_tree->Paint(frame());
+  fml::Arena arena(1024);
+  layer_tree->Paint(frame(), arena);
   EXPECT_EQ(mock_canvas().draw_calls(),
             std::vector({MockCanvas::DrawCall{
                 0, MockCanvas::DrawPathData{child_path, child_paint}}}));
@@ -129,7 +132,8 @@ TEST_F(LayerTreeTest, Multiple) {
   EXPECT_EQ(mock_layer2->parent_cull_rect(),
             kGiantRect);  // Siblings are independent
 
-  layer_tree->Paint(frame());
+  fml::Arena arena(1024);
+  layer_tree->Paint(frame(), arena);
   EXPECT_EQ(
       mock_canvas().draw_calls(),
       std::vector({MockCanvas::DrawCall{
@@ -163,7 +167,8 @@ TEST_F(LayerTreeTest, MultipleWithEmpty) {
   EXPECT_EQ(mock_layer1->parent_cull_rect(), kGiantRect);
   EXPECT_EQ(mock_layer2->parent_cull_rect(), kGiantRect);
 
-  layer_tree->Paint(frame());
+  fml::Arena arena(1024);
+  layer_tree->Paint(frame(), arena);
   EXPECT_EQ(mock_canvas().draw_calls(),
             std::vector({MockCanvas::DrawCall{
                 0, MockCanvas::DrawPathData{child_path1, child_paint1}}}));
@@ -197,7 +202,8 @@ TEST_F(LayerTreeTest, NeedsSystemComposite) {
   EXPECT_EQ(mock_layer1->parent_cull_rect(), kGiantRect);
   EXPECT_EQ(mock_layer2->parent_cull_rect(), kGiantRect);
 
-  layer_tree->Paint(frame());
+  fml::Arena arena(1024);
+  layer_tree->Paint(frame(), arena);
   EXPECT_EQ(
       mock_canvas().draw_calls(),
       std::vector({MockCanvas::DrawCall{

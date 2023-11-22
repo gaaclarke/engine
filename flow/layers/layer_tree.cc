@@ -99,6 +99,7 @@ void LayerTree::TryToRasterCache(
 }
 
 void LayerTree::Paint(CompositorContext::ScopedFrame& frame,
+                      fml::Arena& arena,
                       bool ignore_raster_cache) const {
   TRACE_EVENT0("flutter", "LayerTree::Paint");
 

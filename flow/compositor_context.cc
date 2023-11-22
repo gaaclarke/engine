@@ -115,6 +115,7 @@ CompositorContext::ScopedFrame::~ScopedFrame() {
 }
 
 RasterStatus CompositorContext::ScopedFrame::Raster(
+    fml::Arena& arena,
     flutter::LayerTree& layer_tree,
     bool ignore_raster_cache,
     FrameDamage* frame_damage) {
@@ -149,9 +150,9 @@ RasterStatus CompositorContext::ScopedFrame::Raster(
   }
 
   if (aiks_context_) {
-    PaintLayerTreeImpeller(layer_tree, clip_rect, ignore_raster_cache);
+    PaintLayerTreeImpeller(layer_tree, arena, clip_rect, ignore_raster_cache);
   } else {
-    PaintLayerTreeSkia(layer_tree, clip_rect, needs_save_layer,
+    PaintLayerTreeSkia(layer_tree, arena, clip_rect, needs_save_layer,
                        ignore_raster_cache);
   }
   return RasterStatus::kSuccess;
@@ -159,6 +160,7 @@ RasterStatus CompositorContext::ScopedFrame::Raster(
 
 void CompositorContext::ScopedFrame::PaintLayerTreeSkia(
     flutter::LayerTree& layer_tree,
+    fml::Arena& arena,
     std::optional<SkRect> clip_rect,
     bool needs_save_layer,
     bool ignore_raster_cache) {
@@ -180,18 +182,19 @@ void CompositorContext::ScopedFrame::PaintLayerTreeSkia(
   }
 
   // The canvas()->Restore() is taken care of by the DlAutoCanvasRestore
-  layer_tree.Paint(*this, ignore_raster_cache);
+  layer_tree.Paint(*this, arena, ignore_raster_cache);
 }
 
 void CompositorContext::ScopedFrame::PaintLayerTreeImpeller(
     flutter::LayerTree& layer_tree,
+    fml::Arena& arena,
     std::optional<SkRect> clip_rect,
     bool ignore_raster_cache) {
   if (canvas() && clip_rect) {
     canvas()->Translate(-clip_rect->x(), -clip_rect->y());
   }
 
-  layer_tree.Paint(*this, ignore_raster_cache);
+  layer_tree.Paint(*this, arena, ignore_raster_cache);
 }
 
 /// @brief The max ratio of pixel width or height to size that is dirty which

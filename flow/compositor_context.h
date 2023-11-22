@@ -14,6 +14,7 @@
 #include "flutter/flow/layer_snapshot_store.h"
 #include "flutter/flow/raster_cache.h"
 #include "flutter/flow/stopwatch.h"
+#include "flutter/fml/memory/arena.h"
 #include "flutter/fml/macros.h"
 #include "flutter/fml/raster_thread_merger.h"
 #include "third_party/skia/include/core/SkCanvas.h"
@@ -135,17 +136,20 @@ class CompositorContext {
 
     impeller::AiksContext* aiks_context() const { return aiks_context_; }
 
-    virtual RasterStatus Raster(LayerTree& layer_tree,
+    virtual RasterStatus Raster(fml::Arena& arena,
+                                LayerTree& layer_tree,
                                 bool ignore_raster_cache,
                                 FrameDamage* frame_damage);
 
    private:
     void PaintLayerTreeSkia(flutter::LayerTree& layer_tree,
+                            fml::Arena& arena,
                             std::optional<SkRect> clip_rect,
                             bool needs_save_layer,
                             bool ignore_raster_cache);
 
     void PaintLayerTreeImpeller(flutter::LayerTree& layer_tree,
+                                fml::Arena& arena,
                                 std::optional<SkRect> clip_rect,
                                 bool ignore_raster_cache);
 
