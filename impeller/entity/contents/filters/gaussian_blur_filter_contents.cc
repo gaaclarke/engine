@@ -68,19 +68,19 @@ std::shared_ptr<Texture> MakeDownsampleSubpass(
         // Insert transparent gutter around the downsampled image so the blur
         // creates a halo effect.
         Vector2 texture_size = Vector2(input_texture->GetSize());
-        Quad vertices =
+        Quad guttered_uvs =
             MakeAnchorScale({0.5, 0.5},
-                            texture_size / (texture_size + padding * 2))
-                .Transform(
-                    {Point(0, 0), Point(1, 0), Point(0, 1), Point(1, 1)});
+                            (texture_size + padding * 2) / texture_size)
+                .Transform(uvs);
 
-        BindVertices<TextureFillVertexShader>(cmd, host_buffer,
-                                              {
-                                                  {vertices[0], uvs[0]},
-                                                  {vertices[1], uvs[1]},
-                                                  {vertices[2], uvs[2]},
-                                                  {vertices[3], uvs[3]},
-                                              });
+        BindVertices<TextureFillVertexShader>(
+            cmd, host_buffer,
+            {
+                {Point(0, 0), guttered_uvs[0]},
+                {Point(1, 0), guttered_uvs[1]},
+                {Point(0, 1), guttered_uvs[2]},
+                {Point(1, 1), guttered_uvs[3]},
+            });
 
         SamplerDescriptor linear_sampler_descriptor = sampler_descriptor;
         linear_sampler_descriptor.mag_filter = MinMagFilter::kLinear;
