@@ -293,7 +293,6 @@ std::optional<Entity> GaussianBlurFilterContents::RenderFilter(
   Vector2 downsample_scalar(desired_scalar, desired_scalar);
   Rect source_rect = Rect::MakeSize(input_snapshot->texture->GetSize());
   Rect source_rect_padded = source_rect.Expand(padding);
-  Matrix padding_snapshot_adjustment = Matrix::MakeTranslation(-padding);
   // TODO(gaaclarke): The padding could be removed if we know it's not needed or
   //   resized to account for the expanded_clip_coverage. There doesn't appear
   //   to be the math to make those calculations though. The following
@@ -303,10 +302,9 @@ std::optional<Entity> GaussianBlurFilterContents::RenderFilter(
   //   !input_snapshot->GetCoverage()->Expand(-local_padding)
   //     .Contains(coverage_hint.value()))
   Vector2 downsampled_size = source_rect_padded.GetSize() * downsample_scalar;
+  Vector2 downsampled_padding = padding * downsample_scalar;
   ISize subpass_size =
       ISize(round(downsampled_size.x), round(downsampled_size.y));
-  Vector2 effective_scalar =
-      Vector2(subpass_size) / source_rect_padded.GetSize();
 
   Quad uvs = CalculateUVs(inputs[0], entity, source_rect_padded,
                           input_snapshot->texture->GetSize());
@@ -350,9 +348,9 @@ std::optional<Entity> GaussianBlurFilterContents::RenderFilter(
       input_snapshot->sampler_descriptor, tile_mode_,
       BlurParameters{
           .blur_uv_offset = Point(0.0, pass1_pixel_size.y),
-          .blur_sigma = scaled_sigma.y * effective_scalar.y,
+          .blur_sigma = scaled_sigma.y * downsample_scalar.y,
           .blur_radius =
-              static_cast<int>(std::round(blur_radius.y * effective_scalar.y)),
+              static_cast<int>(std::round(blur_radius.y * downsample_scalar.y)),
           .step_size = 1,
       },
       /*destination_target=*/std::nullopt, blur_uvs);
@@ -372,9 +370,9 @@ std::optional<Entity> GaussianBlurFilterContents::RenderFilter(
       input_snapshot->sampler_descriptor, tile_mode_,
       BlurParameters{
           .blur_uv_offset = Point(pass1_pixel_size.x, 0.0),
-          .blur_sigma = scaled_sigma.x * effective_scalar.x,
+          .blur_sigma = scaled_sigma.x * downsample_scalar.x,
           .blur_radius =
-              static_cast<int>(std::round(blur_radius.x * effective_scalar.x)),
+              static_cast<int>(std::round(blur_radius.x * downsample_scalar.x)),
           .step_size = 1,
       },
       pass3_destination, blur_uvs);
@@ -396,8 +394,8 @@ std::optional<Entity> GaussianBlurFilterContents::RenderFilter(
   return Entity::FromSnapshot(
       Snapshot{.texture = pass3_out.value().GetRenderTargetTexture(),
                .transform = input_snapshot->transform *
-                            padding_snapshot_adjustment *
-                            Matrix::MakeScale(1 / effective_scalar),
+                            Matrix::MakeScale(1 / downsample_scalar) *
+                            Matrix::MakeTranslation(-downsampled_padding),
                .sampler_descriptor = sampler_desc,
                .opacity = input_snapshot->opacity},
       entity.GetBlendMode(), entity.GetClipDepth());
