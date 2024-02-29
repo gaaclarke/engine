@@ -128,8 +128,8 @@ std::shared_ptr<FilterContents> Paint::MaskBlurDescriptor::CreateMaskBlur(
   // away with doing one Gaussian blur.
   if (color_source_contents->IsSolidColor() && !color_filter) {
     return FilterContents::MakeGaussianBlur(
-        FilterInput::Make(color_source_contents), sigma, sigma, style,
-        Entity::TileMode::kDecal);
+        FilterInput::Make(color_source_contents), sigma, sigma,
+        color_source_contents->GetGeometry(), style, Entity::TileMode::kDecal);
   }
 
   /// 1. Create an opaque white mask of the original geometry.

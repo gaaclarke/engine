@@ -37,10 +37,11 @@ std::shared_ptr<FilterContents> FilterContents::MakeGaussianBlur(
     const FilterInput::Ref& input,
     Sigma sigma_x,
     Sigma sigma_y,
+    const std::shared_ptr<Geometry>& geometry,
     FilterContents::BlurStyle blur_style,
     Entity::TileMode tile_mode) {
   auto blur = std::make_shared<GaussianBlurFilterContents>(
-      sigma_x.sigma, sigma_y.sigma, tile_mode, blur_style);
+      sigma_x.sigma, sigma_y.sigma, tile_mode, blur_style, geometry);
   blur->SetInputs({input});
   return blur;
 }

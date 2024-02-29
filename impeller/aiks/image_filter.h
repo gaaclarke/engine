@@ -82,7 +82,8 @@ class ImageFilter {
 
   /// @brief  Wraps the given filter input with a GPU-based image filter.
   virtual std::shared_ptr<FilterContents> WrapInput(
-      const FilterInput::Ref& input) const = 0;
+      const FilterInput::Ref& input,
+      const std::shared_ptr<Geometry&> geometry) const = 0;
 
   virtual std::shared_ptr<ImageFilter> Clone() const = 0;
 
@@ -104,7 +105,8 @@ class BlurImageFilter : public ImageFilter {
 
   // |ImageFilter|
   std::shared_ptr<FilterContents> WrapInput(
-      const FilterInput::Ref& input) const override;
+      const FilterInput::Ref& input,
+      const std::shared_ptr<Geometry&> geometry) const override;
 
   // |ImageFilter|
   std::shared_ptr<ImageFilter> Clone() const override;

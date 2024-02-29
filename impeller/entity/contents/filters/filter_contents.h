@@ -13,6 +13,7 @@
 #include "impeller/core/formats.h"
 #include "impeller/entity/contents/filters/inputs/filter_input.h"
 #include "impeller/entity/entity.h"
+#include "impeller/entity/geometry/geometry.h"
 #include "impeller/geometry/matrix.h"
 #include "impeller/geometry/sigma.h"
 
@@ -41,6 +42,7 @@ class FilterContents : public Contents {
       const FilterInput::Ref& input,
       Sigma sigma_x,
       Sigma sigma_y,
+      const std::shared_ptr<Geometry>& geometry,
       BlurStyle blur_style = BlurStyle::kNormal,
       Entity::TileMode tile_mode = Entity::TileMode::kDecal);
 

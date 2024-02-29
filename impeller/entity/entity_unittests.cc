@@ -1121,13 +1121,15 @@ TEST_P(EntityTest, GaussianBlurFilter) {
       case 0:
         blur = std::make_shared<GaussianBlurFilterContents>(
             blur_sigma_x.sigma, blur_sigma_y.sigma,
-            tile_modes[selected_tile_mode], blur_styles[selected_blur_style]);
+            tile_modes[selected_tile_mode], blur_styles[selected_blur_style],
+            /*geometry=*/nullptr);
         blur->SetInputs({FilterInput::Make(input)});
         break;
       case 1:
         blur = FilterContents::MakeGaussianBlur(
             FilterInput::Make(input), blur_sigma_x, blur_sigma_y,
-            blur_styles[selected_blur_style], tile_modes[selected_tile_mode]);
+            /*geometry=*/nullptr, blur_styles[selected_blur_style],
+            tile_modes[selected_tile_mode]);
         break;
     };
     FML_CHECK(blur);
@@ -1917,8 +1919,8 @@ TEST_P(EntityTest, LinearToSrgbFilter) {
     entity_left.SetTransform(Matrix::MakeScale(GetContentScale()) *
                              Matrix::MakeTranslation({100, 300}) *
                              Matrix::MakeScale(Vector2{0.5, 0.5}));
-    auto unfiltered = FilterContents::MakeGaussianBlur(FilterInput::Make(image),
-                                                       Sigma{0}, Sigma{0});
+    auto unfiltered = FilterContents::MakeGaussianBlur(
+        FilterInput::Make(image), Sigma{0}, Sigma{0}, /*geometry=*/nullptr);
     entity_left.SetContents(unfiltered);
 
     // Define the entity that will be filtered from linear to sRGB.
