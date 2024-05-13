@@ -243,6 +243,15 @@ source_set("display_list_benchmarks_source") {
   ]
 }
 
+executable("display_list_printer") {
+  testonly = true
+  sources = [ "display_list_printer.cc" ]
+  deps = [
+    ":display_list_fixtures",
+    "//flutter/testing:testing_lib",
+  ]
+}
+
 executable("display_list_benchmarks") {
   testonly = true
 

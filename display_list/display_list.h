@@ -149,6 +149,10 @@ enum class DisplayListOpType {
 
 class DlOpReceiver;
 class DisplayListBuilder;
+class DisplayListDebugger;
+namespace testing {
+class DisplayListPrinter;
+}
 
 class SaveLayerOptions {
  public:
@@ -354,6 +358,8 @@ class DisplayList : public SkRefCnt {
                 Culler& culler) const;
 
   friend class DisplayListBuilder;
+  friend class DisplayListDebugger;
+  friend class testing::DisplayListPrinter;
 };
 
 }  // namespace flutter
