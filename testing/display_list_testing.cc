@@ -855,7 +855,10 @@ void DisplayListStreamDispatcher::drawDisplayList(
            << "ID: " << display_list->unique_id() << ", "
            << "bounds: " << display_list->bounds() << ", "
            << "opacity: " << opacity
-           << ");" << std::endl;
+           << ") {" << std::endl;
+  os_ << *display_list;
+  startl() << "}";
+
 }
 void DisplayListStreamDispatcher::drawTextBlob(const sk_sp<SkTextBlob> blob,
                                                SkScalar x,

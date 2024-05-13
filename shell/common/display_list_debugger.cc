@@ -50,9 +50,11 @@ fml::Status DisplayListDebugger::SaveDisplayList(
     //            display_list->byte_count_);
     // file.write(reinterpret_cast<const char*>(&display_list->op_count_),
     //            sizeof(display_list->op_count_));
-    // file.write(reinterpret_cast<const char*>(&display_list->nested_byte_count_),
+    // file.write(reinterpret_cast<const
+    // char*>(&display_list->nested_byte_count_),
     //            sizeof(display_list->nested_byte_count_));
-    // file.write(reinterpret_cast<const char*>(&display_list->nested_op_count_),
+    // file.write(reinterpret_cast<const
+    // char*>(&display_list->nested_op_count_),
     //            sizeof(display_list->nested_op_count_));
     // file.write(reinterpret_cast<const char*>(&display_list->total_depth_),
     //            sizeof(display_list->total_depth_));
@@ -65,9 +67,11 @@ fml::Status DisplayListDebugger::SaveDisplayList(
     // file.write(reinterpret_cast<const char*>(&display_list->bounds_.fBottom),
     //            sizeof(display_list->bounds_.fBottom));
     // file.write(
-    //     reinterpret_cast<const char*>(&display_list->can_apply_group_opacity_),
+    //     reinterpret_cast<const
+    //     char*>(&display_list->can_apply_group_opacity_),
     //     sizeof(display_list->can_apply_group_opacity_));
-    // file.write(reinterpret_cast<const char*>(&display_list->is_ui_thread_safe_),
+    // file.write(reinterpret_cast<const
+    // char*>(&display_list->is_ui_thread_safe_),
     //            sizeof(display_list->is_ui_thread_safe_));
     // file.write(reinterpret_cast<const char*>(
     //                &display_list->modifies_transparent_black_),
