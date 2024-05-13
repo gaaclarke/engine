@@ -152,6 +152,7 @@ source_set("common") {
     "//flutter/shell/common:base64",
     "//flutter/shell/profiling",
     "//flutter/skia",
+    "//flutter/testing:display_list_testing",
   ]
 
   if (impeller_supports_rendering) {

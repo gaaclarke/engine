@@ -12,6 +12,18 @@ config("dynamic_symbols") {
   }
 }
 
+source_set("display_list_testing") {
+  sources = [
+    "display_list_testing.cc",
+    "display_list_testing.h",
+  ]
+  public_deps = [
+    "//flutter/display_list",
+    "//flutter/fml",
+  ]
+  public_configs = [ "//flutter:config" ]
+}
+
 source_set("testing_lib") {
   testonly = true
 
@@ -19,8 +31,6 @@ source_set("testing_lib") {
     "assertions.h",
     "debugger_detection.cc",
     "debugger_detection.h",
-    "display_list_testing.cc",
-    "display_list_testing.h",
     "logger_listener.cc",
     "logger_listener.h",
     "mock_canvas.cc",
@@ -40,6 +50,7 @@ source_set("testing_lib") {
   ]
 
   public_deps = [
+    ":display_list_testing",
     "//flutter/display_list",
     "//flutter/fml",
     "//flutter/third_party/googletest:gmock",
