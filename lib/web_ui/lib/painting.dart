@@ -75,6 +75,10 @@ class Color {
     return (x * 255.0).round();
   }
 
+  static int _floatTo4096(double x) {
+    return (x * 4096.0).round();
+  }
+
   int get value =>
       (_floatToInt8(a) << 24) |
       (_floatToInt8(r) << 16) |
@@ -221,16 +225,16 @@ class Color {
       return false;
     }
     return other is Color &&
-        _floatToInt8(other.a) == _floatToInt8(a) &&
-        _floatToInt8(other.r) == _floatToInt8(r) &&
-        _floatToInt8(other.g) == _floatToInt8(g) &&
-        _floatToInt8(other.b) == _floatToInt8(b) &&
+        _floatTo4096(other.a) == _floatTo4096(a) &&
+        _floatTo4096(other.r) == _floatTo4096(r) &&
+        _floatTo4096(other.g) == _floatTo4096(g) &&
+        _floatTo4096(other.b) == _floatTo4096(b) &&
         other.colorSpace == colorSpace;
   }
 
   @override
-  int get hashCode => Object.hash(_floatToInt8(a), _floatToInt8(r),
-      _floatToInt8(g), _floatToInt8(b), colorSpace);
+  int get hashCode => Object.hash(_floatTo4096(a), _floatTo4096(r),
+      _floatTo4096(g), _floatTo4096(b), colorSpace);
 
   @override
   String toString() => 'Color(0x${value.toRadixString(16).padLeft(8, '0')})';
