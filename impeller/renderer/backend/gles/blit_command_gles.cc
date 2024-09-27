@@ -147,6 +147,11 @@ struct TexImage2DData {
         external_format = GL_RGBA;
         type = GL_UNSIGNED_BYTE;
         break;
+      case PixelFormat::kR32Float:
+        internal_format = GL_RGBA;
+        external_format = GL_RGBA;
+        type = GL_FLOAT;
+        break;
       case PixelFormat::kR32G32B32A32Float:
         internal_format = GL_RGBA;
         external_format = GL_RGBA;

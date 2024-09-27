@@ -15,6 +15,9 @@
 namespace impeller {
 
 namespace {
+
+const int32_t kGaussianDistributionResolution = 256;
+
 // Generous padding to make sure blurs with large sigmas are fully visible. Used
 // to expand the geometry around the rrect.  Larger sigmas have more subtle
 // gradients so they need larger padding to avoid hard cutoffs.  Sigma is
@@ -24,6 +27,24 @@ Scalar PadForSigma(Scalar sigma) {
   Scalar scalar = std::min((1.0f / 47.6f) * sigma + 2.5f, 3.5f);
   return sigma * scalar;
 }
+
+const float kSqrtTwoPi = sqrt(2.0 * M_PI);
+
+float IPGaussian(float x, float sigma) {
+  float variance = sigma * sigma;
+  return exp(-0.5f * x * x / variance) / (kSqrtTwoPi * sigma);
+}
+
+void GenerateData(float* buffer, int32_t size, float blur_sigma) {
+  const float min_val = -blur_sigma * 3.0;
+  const float max_val = blur_sigma * 3.0;
+  const float delta = (max_val - min_val) / size;
+
+  for (int i = 0; i < size; ++i) {
+    buffer[i] = IPGaussian((i * delta) + min_val, blur_sigma);
+  }
+}
+
 }  // namespace
 
 SolidRRectBlurContents::SolidRRectBlurContents() = default;
@@ -118,6 +139,31 @@ bool SolidRRectBlurContents::Render(const ContentContext& renderer,
 
   VS::BindFrameInfo(pass, host_buffer.EmplaceUniform(frame_info));
   FS::BindFragInfo(pass, host_buffer.EmplaceUniform(frag_info));
+
+  TextureDescriptor texture_descriptor;
+  texture_descriptor.format = PixelFormat::kR32Float;
+  // TODO(gaaclarke): Introduce kTexture1D.
+  texture_descriptor.type = TextureType::kTexture2D;
+  texture_descriptor.size = ISize(kGaussianDistributionResolution, 1);
+  // TODO(gaaclarke): Switch to kDevicePrivate.
+  texture_descriptor.storage_mode = StorageMode::kHostVisible;
+  std::shared_ptr<Texture> texture =
+      renderer.GetContext()->GetResourceAllocator()->CreateTexture(
+          texture_descriptor);
+  std::unique_ptr<void, decltype(&free)> bitmap(
+      malloc(sizeof(float) * kGaussianDistributionResolution), free);
+  GenerateData(reinterpret_cast<float*>(bitmap.get()),
+               kGaussianDistributionResolution, blur_sigma);
+  std::shared_ptr<fml::Mapping> mapping = std::make_shared<fml::MallocMapping>(
+      reinterpret_cast<uint8_t*>(bitmap.release()),
+      sizeof(float) * kGaussianDistributionResolution);
+  bool did_set_contents = texture->SetContents(mapping);
+  FML_CHECK(did_set_contents);
+  SamplerDescriptor sampler_descriptor;
+  FS::BindGaussianDistribution(
+      pass, texture,
+      renderer.GetContext()->GetSamplerLibrary()->GetSampler(
+          sampler_descriptor));
 
   if (!pass.Draw().ok()) {
     return false;

@@ -15,11 +15,17 @@ uniform FragInfo {
 }
 frag_info;
 
+uniform sampler2D gaussian_distribution;
+
 in vec2 v_position;
 
 out f16vec4 frag_color;
 
 const int kSampleCount = 4;
+
+float Normalize(float x, float min_val, float max_val) {
+  return (x - min_val) / (max_val - min_val);
+}
 
 /// Closed form unidirectional rounded rect blur mask solution using the
 /// analytical Gaussian integral (with approximated erf).
@@ -87,9 +93,11 @@ float RRectBlur(vec2 sample_position, vec2 half_size) {
   float result = 0.0;
   for (int sample_i = 0; sample_i < kSampleCount; sample_i++) {
     float y = begin_y + interval * (float(sample_i) + 0.5);
+    float norm_y = Normalize(y, -half_sampling_range, half_sampling_range);
     result +=
         RRectBlurX(vec2(sample_position.x, sample_position.y - y), half_size) *
-        IPGaussian(float(y), float(frag_info.blur_sigma)) * interval;
+        texture(gaussian_distribution, vec2(norm_y, 0)).r *  //
+        interval;
   }
 
   return result;
